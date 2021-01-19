@@ -19,6 +19,8 @@
 #include <bitset>
 using namespace std;
 
+//TODO: handle multiple yahtzee's
+//TODO: handle +35 points if score of first part is >= 63
 enum scores {
 	//top part
 	ones,
@@ -69,7 +71,6 @@ void calculateScores() {
 			scoreForRoll[rollId][scores::fourOfAKind] = sum;
 		}
 		if(mxCnt >= 5) {
-			//TODO: handle multiple yahtzee's
 			scoreForRoll[rollId][scores::yahtzee] = 50;
 		}
 
@@ -197,11 +198,8 @@ void calcjRollProbs() {
 double maxExpectedValue[1<<13];
 
 void calcExpectedValue() {
-//This calculates prob[i][j][k] = starting with hand ID = i, this is the
-//probability of getting to hand ID = j with (k+1) re-rolls
-//0 <= i < 252
-//0 <= j < 252
-//0 <= k < 2
+	//reminder: This calculates prob[i][j][k] = starting with hand ID = i, this
+	//is the probability of getting to hand ID = j with (k+1) re-rolls
 	for(int subsetFilled = 0; subsetFilled < (1<<13); ++subsetFilled) {
 		for(int startRoll = 0; startRoll < (int)allRolls.size(); ++startRoll) {
 			//push-dp seems better here
