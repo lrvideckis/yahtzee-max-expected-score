@@ -162,8 +162,14 @@ void calcjRollProbs() {
 		pow6[i] = 6 * pow6[i-1];
 	}
 
+	cout << "6^5 is: " << pow6[5] << endl;
+
+	cout << "prob of each roll: " << endl;
 	for(int roll = 0; roll < (int)allRolls.size(); ++roll) {
 		probOfRoll[roll] /= pow6[5];
+		cout << "roll is: ";
+		for(int val : allRolls[roll]) cout << val << " ";
+		cout << "prob is: " << probOfRoll[roll] << endl;
 	}
 
 	for(int startRoll = 0; startRoll < (int)allRolls.size(); ++startRoll) {
@@ -185,6 +191,19 @@ void calcjRollProbs() {
 			}
 		}
 	}
+	vector<pair<double,int>> asdf;
+	for(int endRoll = 0; endRoll < (int)allRolls.size(); ++endRoll) {
+		asdf.push_back({prob[getRollId({1,2,3,4,5})][endRoll][0], endRoll});
+	}
+	sort(asdf.rbegin(), asdf.rend());
+	for(auto &p : asdf) {
+
+		cout << "end roll: ";
+		for(int val : allRolls[p.second]) cout << val << " ";
+		cout << "prob is: ";
+		cout << p.first << endl;
+	}
+	cout << endl;
 
 	for(int startRoll = 0; startRoll < (int)allRolls.size(); ++startRoll) {
 		for(int endRoll = 0; endRoll < (int)allRolls.size(); ++endRoll) {
@@ -202,18 +221,56 @@ void calcExpectedValue() {
 	//is the probability of getting to hand ID = j with (k+1) re-rolls
 	for(int subsetFilled = 0; subsetFilled < (1<<13); ++subsetFilled) {
 		for(int startRoll = 0; startRoll < (int)allRolls.size(); ++startRoll) {
+
+			const double probStartRoll = probOfRoll[startRoll];
+
 			//push-dp seems better here
 
+			double &dp = maxExpectedValue[subsetFilled];
+
+			//take roll
+			for(int scoreVal = 0; scoreVal < 13; ++scoreVal) {
+				if(subsetFilled & (1<<scoreVal)) {
+					const double newDpVal = probStartRoll * scoreForRoll[startRoll][scoreVal];
+					if(dp < newDpVal) {
+						dp = newDpVal;
+					}
+				}
+			}
+
+			for(int endRoll = 0; endRoll < (int)allRolls.size(); ++endRoll) {
+				for(int scoreVal = 0; scoreVal < 13; ++scoreVal) {
+					if(subsetFilled & (1<<scoreVal)) {
+						//re-roll once/twice
+						for(int reRolls = 0; reRolls < 2; ++reRolls) {
+							double newDpVal = probStartRoll * prob[startRoll][endRoll][reRolls] * scoreForRoll[endRoll][scoreVal];
+							if(dp < newDpVal) {
+								dp = newDpVal;
+							}
+						}
+					}
+				}
+			}
 		}
 	}
 }
 
 int main() {
+	cout << setprecision(5) << fixed;
 	calculateScores();
 	initAllRolls();
 	calcjRollProbs();
+	cout << "before" << endl;
+	return 0;
 	calcExpectedValue();
 
 	cout << setprecision(5) << fixed;
 	cout << "max expected value of yahtzee is: " << maxExpectedValue[(1<<(13))-1] << endl;
+
+	/*
+	cout << "roll,
+	for(int i = 0; i < (int)allRolls.size(); ++i) {
+		cou t
+	}
+	*/
 }
