@@ -42,13 +42,14 @@ enum scores {
 
 int scoreForRoll[252][13];
 
-vector<vector<int>> allRolls;
+vector<vector<int>> allRollsIndistinguishable;
+vector<vector<int>> allRollsDistinguishable;
 
 //scoreForRoll[i][j] = the score for roll with rollID=i if it counds for
 //scores::x s.t. scores::x==j
 void calculateScores() {
-	for(int rollId = 0; rollId < (int)allRolls.size(); ++rollId) {
-		const vector<int> &roll = allRolls[rollId];
+	for(int rollId = 0; rollId < (int)allRollsIndistinguishable.size(); ++rollId) {
+		const vector<int> &roll = allRollsIndistinguishable[rollId];
 		vector<int> cnts(7,0);
 		int mxCnt = 0;
 		int sum = 0;
@@ -109,31 +110,45 @@ int getRollId(vector<int> roll) {
 		assert(1 <= roll[i] && roll[i] <= 6);
 	}
 	sort(roll.begin(), roll.end());
-	auto it = lower_bound(allRolls.begin(), allRolls.end(), roll);
+	auto it = lower_bound(allRollsIndistinguishable.begin(), allRollsIndistinguishable.end(), roll);
 	assert(*it == roll);
-	return lower_bound(allRolls.begin(), allRolls.end(), roll) - allRolls.begin();
-}
-
-void initAllRolls() {
-	for(int a = 1; a <= 6; ++a) {
-		for(int b = 1; b <= 6; ++b) {
-			for(int c = 1; c <= 6; ++c) {
-				for(int d = 1; d <= 6; ++d) {
-					for(int e = 1; e <= 6; ++e) {
-						vector<int> roll = {a,b,c,d,e};
-						sort(roll.begin(), roll.end());
-						allRolls.push_back(roll);
-					}
-				}
-			}
-		}
-	}
-	sort(allRolls.begin(), allRolls.end());
-	allRolls.erase(unique(allRolls.begin(), allRolls.end()), allRolls.end());
-	assert(allRolls.size() == 252);
+	return lower_bound(allRollsIndistinguishable.begin(), allRollsIndistinguishable.end(), roll) - allRollsIndistinguishable.begin();
 }
 
 double probOfRoll[252];
+int pow6[7];
+
+void initAllRolls() {
+	pow6[0] = 1;
+	for(int i = 1; i < 7; ++i) {
+		pow6[i] = 6 * pow6[i-1];
+	}
+	for(int rollVal = 0; rollVal < pow6[5]; ++rollVal) {
+		int temp = rollVal;
+		vector<int> roll(5);
+		for(int i = 0; i < 5; ++i) {
+			roll[i] = temp%6 + 1;
+			temp /= 6;
+		}
+		allRollsDistinguishable.push_back(roll);
+		sort(roll.begin(), roll.end());
+		allRollsIndistinguishable.push_back(roll);
+	}
+
+	sort(allRollsIndistinguishable.begin(), allRollsIndistinguishable.end());
+	allRollsIndistinguishable.erase(unique(allRollsIndistinguishable.begin(), allRollsIndistinguishable.end()), allRollsIndistinguishable.end());
+	assert(allRollsIndistinguishable.size() == 252);
+	for(auto &roll : allRollsDistinguishable) {
+		++probOfRoll[getRollId(roll)];
+	}
+	double sum = 0;
+	for(int i = 0; i < (int)allRollsIndistinguishable.size(); ++i) {
+		probOfRoll[i] /= pow6[5];
+		sum += probOfRoll[i];
+	}
+	cout << "sum (should be 1): " << sum << endl;
+}
+
 double prob[252][252][2];
 
 //This calculates prob[i][j][k] = starting with hand ID = i, this is the
@@ -141,73 +156,30 @@ double prob[252][252][2];
 //0 <= i < 252
 //0 <= j < 252
 //0 <= k < 2
-void calcjRollProbs() {
-	vector<vector<int>> allRollsDistinguishable;
-	for(int a = 1; a <= 6; ++a) {
-		for(int b = 1; b <= 6; ++b) {
-			for(int c = 1; c <= 6; ++c) {
-				for(int d = 1; d <= 6; ++d) {
-					for(int e = 1; e <= 6; ++e) {
-						allRollsDistinguishable.push_back({a,b,c,d,e});
-						++probOfRoll[getRollId({a,b,c,d,e})];
-					}
-				}
-			}
-		}
-	}
-
-
-	vector<int> pow6(7,1);
-	for(int i = 1; i < (int)pow6.size(); ++i) {
-		pow6[i] = 6 * pow6[i-1];
-	}
-
-	cout << "6^5 is: " << pow6[5] << endl;
-
-	cout << "prob of each roll: " << endl;
-	for(int roll = 0; roll < (int)allRolls.size(); ++roll) {
-		probOfRoll[roll] /= pow6[5];
-		cout << "roll is: ";
-		for(int val : allRolls[roll]) cout << val << " ";
-		cout << "prob is: " << probOfRoll[roll] << endl;
-	}
-
-	for(int startRoll = 0; startRoll < (int)allRolls.size(); ++startRoll) {
+void calcRollProbs() {
+	for(int startRoll = 0; startRoll < (int)allRollsIndistinguishable.size(); ++startRoll) {
 		for(int subsetRerolled = 0; subsetRerolled < (1<<5); ++subsetRerolled) {
 			int bits = __builtin_popcount(subsetRerolled);
-			vector<int> numberOfways(allRolls.size(),0);
+			vector<int> numberOfways(allRollsIndistinguishable.size(),0);
 			for(int id = 0; id < pow6[bits]; ++id) {
-				vector<int> roll = allRolls[startRoll];
-				int ptr = 4;
+				vector<int> roll = allRollsIndistinguishable[startRoll];
+				int ptr = 0;
 				for(int die = 0; die < 5; ++die) {
 					if(subsetRerolled&(1<<die)) {
-						roll[die] = allRollsDistinguishable[id][ptr--];
+						roll[die] = allRollsDistinguishable[id][ptr++];
 					}
 				}
 				++numberOfways[getRollId(roll)];
 			}
-			for(int endRoll = 0; endRoll < (int)allRolls.size(); ++endRoll) {
+			for(int endRoll = 0; endRoll < (int)allRollsIndistinguishable.size(); ++endRoll) {
 				prob[startRoll][endRoll][0] = max(prob[startRoll][endRoll][0], numberOfways[endRoll]/double(pow6[bits]));
 			}
 		}
 	}
-	vector<pair<double,int>> asdf;
-	for(int endRoll = 0; endRoll < (int)allRolls.size(); ++endRoll) {
-		asdf.push_back({prob[getRollId({1,2,3,4,5})][endRoll][0], endRoll});
-	}
-	sort(asdf.rbegin(), asdf.rend());
-	for(auto &p : asdf) {
 
-		cout << "end roll: ";
-		for(int val : allRolls[p.second]) cout << val << " ";
-		cout << "prob is: ";
-		cout << p.first << endl;
-	}
-	cout << endl;
-
-	for(int startRoll = 0; startRoll < (int)allRolls.size(); ++startRoll) {
-		for(int endRoll = 0; endRoll < (int)allRolls.size(); ++endRoll) {
-			for(int midRoll = 0; midRoll < (int)allRolls.size(); ++midRoll) {
+	for(int startRoll = 0; startRoll < (int)allRollsIndistinguishable.size(); ++startRoll) {
+		for(int endRoll = 0; endRoll < (int)allRollsIndistinguishable.size(); ++endRoll) {
+			for(int midRoll = 0; midRoll < (int)allRollsIndistinguishable.size(); ++midRoll) {
 				prob[startRoll][endRoll][1] = max(prob[startRoll][endRoll][1], prob[startRoll][midRoll][0] * prob[midRoll][endRoll][0]);
 			}
 		}
@@ -220,32 +192,32 @@ void calcExpectedValue() {
 	//reminder: This calculates prob[i][j][k] = starting with hand ID = i, this
 	//is the probability of getting to hand ID = j with (k+1) re-rolls
 	for(int subsetFilled = 0; subsetFilled < (1<<13); ++subsetFilled) {
-		for(int startRoll = 0; startRoll < (int)allRolls.size(); ++startRoll) {
-
-			const double probStartRoll = probOfRoll[startRoll];
-
+		for(int startRoll = 0; startRoll < (int)allRollsIndistinguishable.size(); ++startRoll) {
 			//push-dp seems better here
 
-			double &dp = maxExpectedValue[subsetFilled];
+			const double probStartRoll = probOfRoll[startRoll];
+			const double currDp = maxExpectedValue[subsetFilled];
 
 			//take roll
 			for(int scoreVal = 0; scoreVal < 13; ++scoreVal) {
-				if(subsetFilled & (1<<scoreVal)) {
-					const double newDpVal = probStartRoll * scoreForRoll[startRoll][scoreVal];
-					if(dp < newDpVal) {
-						dp = newDpVal;
+				if((subsetFilled & (1<<scoreVal)) == 0) {
+					double &nextDpVal = maxExpectedValue[subsetFilled | (1<<scoreVal)];
+					const double currScore = probStartRoll * scoreForRoll[startRoll][scoreVal] + currDp;
+					if(nextDpVal < currScore) {
+						nextDpVal = currScore;
 					}
 				}
 			}
 
-			for(int endRoll = 0; endRoll < (int)allRolls.size(); ++endRoll) {
+			for(int endRoll = 0; endRoll < (int)allRollsIndistinguishable.size(); ++endRoll) {
 				for(int scoreVal = 0; scoreVal < 13; ++scoreVal) {
-					if(subsetFilled & (1<<scoreVal)) {
+					if((subsetFilled & (1<<scoreVal)) == 0) {
 						//re-roll once/twice
 						for(int reRolls = 0; reRolls < 2; ++reRolls) {
-							double newDpVal = probStartRoll * prob[startRoll][endRoll][reRolls] * scoreForRoll[endRoll][scoreVal];
-							if(dp < newDpVal) {
-								dp = newDpVal;
+							double &nextDpVal = maxExpectedValue[subsetFilled | (1<<scoreVal)];
+							const double currScore = probStartRoll * prob[startRoll][endRoll][reRolls] * scoreForRoll[endRoll][scoreVal] + currDp;
+							if(nextDpVal < currScore) {
+								nextDpVal = currScore;
 							}
 						}
 					}
@@ -255,22 +227,39 @@ void calcExpectedValue() {
 	}
 }
 
+/*
+   dp[subset scores][roll][num rerolls] = max expected score
+
+   if rerolls == 0:
+       try all un-filled scores, and max next dp val
+
+   if rerolls == 1:
+       take roll as is
+
+	   re-roll:
+	       try every subset of die to re-roll and
+		   dp[subset scores][new Re-rolled][num rerolls - 1] = max(itself, currDP)
+
+
+
+
+	after re-rolling 0,1,2 times, we get a probability distribution (prob[rollID] = probability of getting that roll)
+	we would use the remaining scores to "guide" the probability distribution towards the high-scoring scores
+
+	then to calculate the dp:
+	dp[subset of scores] = max for each end-roll: (max over <=13 unfilled scores: prob[end roll] * scoreForRoll[end roll][score] + dp[new subset scores])
+ */
+
 int main() {
 	cout << setprecision(5) << fixed;
-	calculateScores();
 	initAllRolls();
-	calcjRollProbs();
+	calculateScores();
+	cout << "after calculating scores" << endl;
+	calcRollProbs();
 	cout << "before" << endl;
-	return 0;
 	calcExpectedValue();
+	cout << "after" << endl;
 
 	cout << setprecision(5) << fixed;
 	cout << "max expected value of yahtzee is: " << maxExpectedValue[(1<<(13))-1] << endl;
-
-	/*
-	cout << "roll,
-	for(int i = 0; i < (int)allRolls.size(); ++i) {
-		cou t
-	}
-	*/
 }
