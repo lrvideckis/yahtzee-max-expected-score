@@ -1,22 +1,8 @@
 #include <iostream>
-#include <iomanip>
 #include <algorithm>
-#include <cmath>
 #include <vector>
-#include <set>
-#include <map>
-#include <unordered_set>
-#include <unordered_map>
-#include <stack>
-#include <queue>
-#include <ctime>
 #include <cassert>
-#include <complex>
-#include <string>
-#include <cstring>
-#include <chrono>
-#include <random>
-#include <bitset>
+#include <iomanip>
 using namespace std;
 
 //TODO: handle multiple yahtzee's
@@ -115,7 +101,7 @@ int getRollId(vector<int> roll) {
 	return lower_bound(allRollsIndistinguishable.begin(), allRollsIndistinguishable.end(), roll) - allRollsIndistinguishable.begin();
 }
 
-double probOfRoll[252];
+int probOfRoll[252];
 int pow6[7];
 
 void initAllRolls() {
@@ -141,18 +127,18 @@ void initAllRolls() {
 	for(auto &roll : allRollsDistinguishable) {
 		++probOfRoll[getRollId(roll)];
 	}
-	double sum = 0;
+	int sum = 0;
 	for(int i = 0; i < (int)allRollsIndistinguishable.size(); ++i) {
-		probOfRoll[i] /= pow6[5];
+		//probOfRoll[i] /= pow6[5];
 		sum += probOfRoll[i];
 	}
-	cout << "sum (should be 1): " << sum << endl;
+	cout << "sum (should be 6^5): " << sum << " "<< pow6[5] << endl;
 }
 
-double prob[252][252][2];
+double prob[252][252];
 
-//This calculates prob[i][j][k] = starting with hand ID = i, this is the
-//probability of getting to hand ID = j with (k+1) re-rolls
+//This calculates prob[i][j] = starting with hand ID = i, this is the
+//probability of getting to hand ID = j with one re-roll
 //0 <= i < 252
 //0 <= j < 252
 //0 <= k < 2
@@ -172,56 +158,7 @@ void calcRollProbs() {
 				++numberOfways[getRollId(roll)];
 			}
 			for(int endRoll = 0; endRoll < (int)allRollsIndistinguishable.size(); ++endRoll) {
-				prob[startRoll][endRoll][0] = max(prob[startRoll][endRoll][0], numberOfways[endRoll]/double(pow6[bits]));
-			}
-		}
-	}
-
-	for(int startRoll = 0; startRoll < (int)allRollsIndistinguishable.size(); ++startRoll) {
-		for(int endRoll = 0; endRoll < (int)allRollsIndistinguishable.size(); ++endRoll) {
-			for(int midRoll = 0; midRoll < (int)allRollsIndistinguishable.size(); ++midRoll) {
-				prob[startRoll][endRoll][1] = max(prob[startRoll][endRoll][1], prob[startRoll][midRoll][0] * prob[midRoll][endRoll][0]);
-			}
-		}
-	}
-}
-
-double maxExpectedValue[1<<13];
-
-void calcExpectedValue() {
-	//reminder: This calculates prob[i][j][k] = starting with hand ID = i, this
-	//is the probability of getting to hand ID = j with (k+1) re-rolls
-	for(int subsetFilled = 0; subsetFilled < (1<<13); ++subsetFilled) {
-		for(int startRoll = 0; startRoll < (int)allRollsIndistinguishable.size(); ++startRoll) {
-			//push-dp seems better here
-
-			const double probStartRoll = probOfRoll[startRoll];
-			const double currDp = maxExpectedValue[subsetFilled];
-
-			//take roll
-			for(int scoreVal = 0; scoreVal < 13; ++scoreVal) {
-				if((subsetFilled & (1<<scoreVal)) == 0) {
-					double &nextDpVal = maxExpectedValue[subsetFilled | (1<<scoreVal)];
-					const double currScore = probStartRoll * scoreForRoll[startRoll][scoreVal] + currDp;
-					if(nextDpVal < currScore) {
-						nextDpVal = currScore;
-					}
-				}
-			}
-
-			for(int endRoll = 0; endRoll < (int)allRollsIndistinguishable.size(); ++endRoll) {
-				for(int scoreVal = 0; scoreVal < 13; ++scoreVal) {
-					if((subsetFilled & (1<<scoreVal)) == 0) {
-						//re-roll once/twice
-						for(int reRolls = 0; reRolls < 2; ++reRolls) {
-							double &nextDpVal = maxExpectedValue[subsetFilled | (1<<scoreVal)];
-							const double currScore = probStartRoll * prob[startRoll][endRoll][reRolls] * scoreForRoll[endRoll][scoreVal] + currDp;
-							if(nextDpVal < currScore) {
-								nextDpVal = currScore;
-							}
-						}
-					}
-				}
+				prob[startRoll][endRoll] = max(prob[startRoll][endRoll], numberOfways[endRoll]/double(pow6[bits]));
 			}
 		}
 	}
@@ -238,7 +175,7 @@ void calcExpectedValue() {
 
 	   re-roll:
 	       try every subset of die to re-roll and
-		   dp[subset scores][new Re-rolled][num rerolls - 1] = max(itself, currDP)
+		   dp[subset scores][new Re-rolled][num rerolls - 1] = max(itself, currDp)
 
 
 
@@ -249,6 +186,45 @@ void calcExpectedValue() {
 	then to calculate the dp:
 	dp[subset of scores] = max for each end-roll: (max over <=13 unfilled scores: prob[end roll] * scoreForRoll[end roll][score] + dp[new subset scores])
  */
+
+double maxExpectedValue[1<<13][252][3];
+double dp[1<<13];
+
+void calcExpectedValue() {
+	//reminder: This calculates prob[i][j][k] = starting with hand ID = i, this
+	//is the probability of getting to hand ID = j with (k+1) re-rolls
+	for(int subsetFilled = 1; subsetFilled < (1<<13); ++subsetFilled) {
+		for(int roll = 0; roll < (int)allRollsIndistinguishable.size(); ++roll) {
+			for(int numberRerolls = 0; numberRerolls <= 2; ++numberRerolls) {
+				double &currDp = maxExpectedValue[subsetFilled][roll][numberRerolls];
+
+				//take roll
+				for(int scoreVal = 0; scoreVal < 13; ++scoreVal) {
+					if(subsetFilled & (1<<scoreVal)) {
+						const double nextScore = scoreForRoll[roll][scoreVal] + maxExpectedValue[subsetFilled ^ (1<<scoreVal)][roll][2];
+						currDp = max(currDp, nextScore);
+					}
+				}
+
+				//reroll
+				if(numberRerolls > 0) {
+					for(int endRoll = 0; endRoll < (int)allRollsIndistinguishable.size(); ++endRoll) {
+						for(int scoreVal = 0; scoreVal < 13; ++scoreVal) {
+							if(subsetFilled & (1<<scoreVal)) {
+								const double nextScore = prob[roll][endRoll] * scoreForRoll[endRoll][scoreVal] + maxExpectedValue[subsetFilled ^ (1<<scoreVal)][endRoll][numberRerolls-1];
+								currDp = max(currDp, nextScore);
+							}
+						}
+					}
+				}
+
+				//currDp /= 252;
+				dp[subsetFilled] = max(dp[subsetFilled], currDp);
+			}
+		}
+		cout << "subsetFilled: " << subsetFilled << " dp: " << dp[subsetFilled] << endl;
+	}
+}
 
 int main() {
 	cout << setprecision(5) << fixed;
@@ -261,5 +237,5 @@ int main() {
 	cout << "after" << endl;
 
 	cout << setprecision(5) << fixed;
-	cout << "max expected value of yahtzee is: " << maxExpectedValue[(1<<(13))-1] << endl;
+	cout << "max expected value of yahtzee is: " << dp[(1<<(13))-1] << endl;
 }
