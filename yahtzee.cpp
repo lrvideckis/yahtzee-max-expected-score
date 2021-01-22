@@ -188,11 +188,64 @@ void calcRollProbs() {
  */
 
 double maxExpectedValue[1<<13][252][3];
-double dp[1<<13];
+//double dp[1<<13];
 
 void calcExpectedValue() {
-	//reminder: This calculates prob[i][j][k] = starting with hand ID = i, this
-	//is the probability of getting to hand ID = j with (k+1) re-rolls
+	//reminder: This calculates prob[i][j] = starting with hand ID = i, this is
+	//the probability of getting to hand ID = j with 1 re-roll
+	cout << "hi there" << endl;
+	for(int subsetFilled = 1; subsetFilled < (1<<13); ++subsetFilled) {
+		for(int numberRerolls = 0; numberRerolls <= 2; ++numberRerolls) {
+			for(const auto &rollVector : allRollsDistinguishable) {
+				cout << "subsetFilled: " << subsetFilled << endl;
+				assert(subsetFilled == 1);
+				cout << "here, rollVector: ";
+				for(int val : rollVector) cout << val << " ";
+				cout << endl;
+				cout << "numberRerolls: " << numberRerolls << endl;
+
+				const int roll = getRollId(rollVector);
+				double &currDp = maxExpectedValue[subsetFilled][roll][numberRerolls];
+
+				//take roll
+				for(int scoreVal = 0; scoreVal < 13; ++scoreVal) {
+					if(subsetFilled & (1<<scoreVal)) {
+						assert(maxExpectedValue[subsetFilled ^ (1<<scoreVal)][roll][2] == 0);
+						const double nextScore = scoreForRoll[roll][scoreVal] + maxExpectedValue[subsetFilled ^ (1<<scoreVal)][roll][2];//should be average over each roll of max expected value of that roll
+						currDp = max(currDp, nextScore);
+					}
+				}
+
+				//re-roll
+				if(numberRerolls > 0) {
+					//for each subset of die that you can re-roll
+					for(int subsetRerolled = 0; subsetRerolled < (1<<5); ++subsetRerolled) {
+						//find average of expected values
+						double sum = 0;
+
+						int bits = __builtin_popcount(subsetRerolled);
+						for(int id = 0; id < pow6[bits]; ++id) {
+							vector<int> newRoll = rollVector;
+							int ptr = 0;
+							for(int die = 0; die < 5; ++die) {
+								if(subsetRerolled&(1<<die)) {
+									newRoll[die] = allRollsDistinguishable[id][ptr++];
+								}
+							}
+							assert(ptr == bits);
+							sum += maxExpectedValue[subsetFilled][getRollId(newRoll)][numberRerolls-1];
+						}
+						sum /= double(pow6[bits]);
+
+						currDp = max(currDp, sum);
+					}
+				}
+				cout << "dp: " << currDp << endl;
+				cout << endl << endl;
+			}
+		}
+	}
+	/*
 	for(int subsetFilled = 1; subsetFilled < (1<<13); ++subsetFilled) {
 		for(int roll = 0; roll < (int)allRollsIndistinguishable.size(); ++roll) {
 			for(int numberRerolls = 0; numberRerolls <= 2; ++numberRerolls) {
@@ -211,19 +264,19 @@ void calcExpectedValue() {
 					for(int endRoll = 0; endRoll < (int)allRollsIndistinguishable.size(); ++endRoll) {
 						for(int scoreVal = 0; scoreVal < 13; ++scoreVal) {
 							if(subsetFilled & (1<<scoreVal)) {
-								const double nextScore = prob[roll][endRoll] * scoreForRoll[endRoll][scoreVal] + maxExpectedValue[subsetFilled ^ (1<<scoreVal)][endRoll][numberRerolls-1];
+								const double nextScore = prob[roll][endRoll] * maxExpectedValue[subsetFilled][endRoll][numberRerolls-1];
 								currDp = max(currDp, nextScore);
 							}
 						}
 					}
 				}
 
-				//currDp /= 252;
 				dp[subsetFilled] = max(dp[subsetFilled], currDp);
 			}
 		}
 		cout << "subsetFilled: " << subsetFilled << " dp: " << dp[subsetFilled] << endl;
 	}
+	*/
 }
 
 int main() {
@@ -236,6 +289,5 @@ int main() {
 	calcExpectedValue();
 	cout << "after" << endl;
 
-	cout << setprecision(5) << fixed;
-	cout << "max expected value of yahtzee is: " << dp[(1<<(13))-1] << endl;
+	//cout << "max expected value of yahtzee is: " << dp[(1<<(13))-1] << endl;
 }
