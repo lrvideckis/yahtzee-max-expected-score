@@ -101,7 +101,7 @@ int getRollId(vector<int> roll) {
 	return lower_bound(allRollsIndistinguishable.begin(), allRollsIndistinguishable.end(), roll) - allRollsIndistinguishable.begin();
 }
 
-int probOfRoll[252];
+int numberOfRoll[252];
 int pow6[7];
 
 void initAllRolls() {
@@ -125,12 +125,11 @@ void initAllRolls() {
 	allRollsIndistinguishable.erase(unique(allRollsIndistinguishable.begin(), allRollsIndistinguishable.end()), allRollsIndistinguishable.end());
 	assert(allRollsIndistinguishable.size() == 252);
 	for(auto &roll : allRollsDistinguishable) {
-		++probOfRoll[getRollId(roll)];
+		++numberOfRoll[getRollId(roll)];
 	}
 	int sum = 0;
 	for(int i = 0; i < (int)allRollsIndistinguishable.size(); ++i) {
-		//probOfRoll[i] /= pow6[5];
-		sum += probOfRoll[i];
+		sum += numberOfRoll[i];
 	}
 	cout << "sum (should be 6^5): " << sum << " "<< pow6[5] << endl;
 }
@@ -165,53 +164,41 @@ void calcRollProbs() {
 }
 
 /*
-   dp[subset scores][roll][num rerolls] = max expected score
+   dp[subset scores filled][roll][num rerolls] = max expected score
 
    if rerolls == 0:
-       try all un-filled scores, and max next dp val
+       try all scores in "subset scores filled", and max with previous dp value
 
-   if rerolls == 1:
-       take roll as is
+   if rerolls > 0:
+       try all scores in "subset scores filled", and max with previous dp value
 
-	   re-roll:
-	       try every subset of die to re-roll and
-		   dp[subset scores][new Re-rolled][num rerolls - 1] = max(itself, currDp)
+	   and
 
-
-
-
-	after re-rolling 0,1,2 times, we get a probability distribution (prob[rollID] = probability of getting that roll)
-	we would use the remaining scores to "guide" the probability distribution towards the high-scoring scores
-
-	then to calculate the dp:
-	dp[subset of scores] = max for each end-roll: (max over <=13 unfilled scores: prob[end roll] * scoreForRoll[end roll][score] + dp[new subset scores])
+	   try every subset of die to re-roll and
+	   dp[subset scores][new Re-rolled][num rerolls - 1] = max(itself, average of dp values)
  */
 
 double maxExpectedValue[1<<13][252][3];
-//double dp[1<<13];
+double averageMaxValue[1<<13];
 
 void calcExpectedValue() {
-	//reminder: This calculates prob[i][j] = starting with hand ID = i, this is
-	//the probability of getting to hand ID = j with 1 re-roll
 	cout << "hi there" << endl;
 	for(int subsetFilled = 1; subsetFilled < (1<<13); ++subsetFilled) {
 		for(int numberRerolls = 0; numberRerolls <= 2; ++numberRerolls) {
-			for(const auto &rollVector : allRollsDistinguishable) {
+			for(int roll = 0; roll < (int)allRollsIndistinguishable.size(); ++roll) {//can be sped up to 252
 				cout << "subsetFilled: " << subsetFilled << endl;
-				assert(subsetFilled == 1);
 				cout << "here, rollVector: ";
-				for(int val : rollVector) cout << val << " ";
+				for(int val : allRollsIndistinguishable[roll]) cout << val << " ";
 				cout << endl;
 				cout << "numberRerolls: " << numberRerolls << endl;
 
-				const int roll = getRollId(rollVector);
+				assert(roll == getRollId(allRollsIndistinguishable[roll]));
 				double &currDp = maxExpectedValue[subsetFilled][roll][numberRerolls];
 
 				//take roll
 				for(int scoreVal = 0; scoreVal < 13; ++scoreVal) {
 					if(subsetFilled & (1<<scoreVal)) {
-						assert(maxExpectedValue[subsetFilled ^ (1<<scoreVal)][roll][2] == 0);
-						const double nextScore = scoreForRoll[roll][scoreVal] + maxExpectedValue[subsetFilled ^ (1<<scoreVal)][roll][2];//should be average over each roll of max expected value of that roll
+						const double nextScore = scoreForRoll[roll][scoreVal] + averageMaxValue[subsetFilled ^ (1<<scoreVal)];
 						currDp = max(currDp, nextScore);
 					}
 				}
@@ -225,7 +212,7 @@ void calcExpectedValue() {
 
 						int bits = __builtin_popcount(subsetRerolled);
 						for(int id = 0; id < pow6[bits]; ++id) {
-							vector<int> newRoll = rollVector;
+							vector<int> newRoll = allRollsIndistinguishable[roll];
 							int ptr = 0;
 							for(int die = 0; die < 5; ++die) {
 								if(subsetRerolled&(1<<die)) {
@@ -242,41 +229,13 @@ void calcExpectedValue() {
 				}
 				cout << "dp: " << currDp << endl;
 				cout << endl << endl;
+
+				if(numberRerolls == 2) {
+					averageMaxValue[subsetFilled] += numberOfRoll[roll] * currDp / double(pow6[5]);
+				}
 			}
 		}
 	}
-	/*
-	for(int subsetFilled = 1; subsetFilled < (1<<13); ++subsetFilled) {
-		for(int roll = 0; roll < (int)allRollsIndistinguishable.size(); ++roll) {
-			for(int numberRerolls = 0; numberRerolls <= 2; ++numberRerolls) {
-				double &currDp = maxExpectedValue[subsetFilled][roll][numberRerolls];
-
-				//take roll
-				for(int scoreVal = 0; scoreVal < 13; ++scoreVal) {
-					if(subsetFilled & (1<<scoreVal)) {
-						const double nextScore = scoreForRoll[roll][scoreVal] + maxExpectedValue[subsetFilled ^ (1<<scoreVal)][roll][2];
-						currDp = max(currDp, nextScore);
-					}
-				}
-
-				//reroll
-				if(numberRerolls > 0) {
-					for(int endRoll = 0; endRoll < (int)allRollsIndistinguishable.size(); ++endRoll) {
-						for(int scoreVal = 0; scoreVal < 13; ++scoreVal) {
-							if(subsetFilled & (1<<scoreVal)) {
-								const double nextScore = prob[roll][endRoll] * maxExpectedValue[subsetFilled][endRoll][numberRerolls-1];
-								currDp = max(currDp, nextScore);
-							}
-						}
-					}
-				}
-
-				dp[subsetFilled] = max(dp[subsetFilled], currDp);
-			}
-		}
-		cout << "subsetFilled: " << subsetFilled << " dp: " << dp[subsetFilled] << endl;
-	}
-	*/
 }
 
 int main() {
@@ -284,7 +243,7 @@ int main() {
 	initAllRolls();
 	calculateScores();
 	cout << "after calculating scores" << endl;
-	calcRollProbs();
+	//calcRollProbs();
 	cout << "before" << endl;
 	calcExpectedValue();
 	cout << "after" << endl;
