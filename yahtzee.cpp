@@ -3,7 +3,9 @@
 #include <vector>
 #include <cassert>
 #include <iomanip>
+#include <chrono>
 using namespace std;
+using namespace std::chrono;
 
 //TODO: handle multiple yahtzee's
 //TODO: handle +35 points if score of first part is >= 63
@@ -132,15 +134,15 @@ double maxEV[1<<13][3][252];
 double averageMaxEV[1<<13];
 vector<pair<int,int>> cntReroll[252][1<<5];
 int tempCnt[252];
+vector<int> tempRolls[7776];
 
 void calcExpectedValue() {
 	cout << "hi1" << endl;
+	auto start = high_resolution_clock::now();
 	for(int roll = 0; roll < (int)allRollsIndistinguishable.size(); ++roll) {
 		for(int subsetRerolled = 0; subsetRerolled < (1<<5); ++subsetRerolled) {
-			for(int endRoll = 0; endRoll < 252; ++endRoll) {
-				tempCnt[endRoll] = 0;
-			}
 			const int iters = pow6[__builtin_popcount(subsetRerolled)];
+			int sz = 0;
 			for(int id = 0; id < iters; ++id) {
 				vector<int> newRoll = allRollsIndistinguishable[roll];
 				int ptr = 0;
@@ -150,7 +152,18 @@ void calcExpectedValue() {
 					}
 				}
 				//here, we have a triplet: (start roll, subset die re-rolled, end roll)
-				++tempCnt[getRollId(newRoll)];
+				sort(newRoll.begin(), newRoll.end());
+				tempRolls[sz++] = newRoll;
+			}
+			sort(tempRolls, tempRolls + sz);
+			for(int endRoll = 0; endRoll < 252; ++endRoll) {
+				tempCnt[endRoll] = 0;
+			}
+			int ptr = 0;
+			for(int i = 0; i < sz; ++i) {
+				while(ptr < (int)allRollsIndistinguishable.size() && allRollsIndistinguishable[ptr] < tempRolls[i]) ++ptr;
+				assert(tempRolls[i] == allRollsIndistinguishable[ptr]);
+				++tempCnt[ptr];
 			}
 			for(int endRoll = 0; endRoll < 252; ++endRoll) {
 				if(tempCnt[endRoll] > 0) {
@@ -160,6 +173,10 @@ void calcExpectedValue() {
 		}
 	}
 	cout << "hi2" << endl;
+	auto stop = high_resolution_clock::now();
+	auto duration = duration_cast<microseconds>(stop - start);
+	cout << "duration in seconds: " << duration.count()/double(1000 * 1000) << endl;
+
 
 	for(int subsetFilled = 1; subsetFilled < (1<<13); ++subsetFilled) {
 		for(int numberRerolls = 0; numberRerolls <= 2; ++numberRerolls) {
@@ -170,7 +187,9 @@ void calcExpectedValue() {
 				for(int scoreVal = 0; scoreVal < 13; ++scoreVal) {
 					if(subsetFilled & (1<<scoreVal)) {
 						const double nextScore = scoreForRoll[roll][scoreVal] + averageMaxEV[subsetFilled ^ (1<<scoreVal)];
-						currDp = max(currDp, nextScore);
+						if(currDp < nextScore) {
+							currDp = nextScore;
+						}
 					}
 				}
 
@@ -183,7 +202,10 @@ void calcExpectedValue() {
 						for(const auto &p : cntReroll[roll][subsetRerolled]) {
 							sum += p.first * maxEV[subsetFilled][numberRerolls-1][p.second];
 						}
-						currDp = max(currDp, sum / double(pow6[__builtin_popcount(subsetRerolled)]));
+						const double nextScore = sum / double(pow6[__builtin_popcount(subsetRerolled)]);
+						if(currDp < nextScore) {
+							currDp = nextScore;
+						}
 					}
 				}
 				if(numberRerolls == 2) {
@@ -191,6 +213,7 @@ void calcExpectedValue() {
 				}
 			}
 		}
+		cout << "subsetFilled: " << subsetFilled << " averageMaxEV: " << averageMaxEV[subsetFilled] << endl;
 	}
 }
 
