@@ -1,7 +1,6 @@
 #include <iostream>
 #include <algorithm>
 #include <vector>
-#include <map>
 #include <cassert>
 #include <iomanip>
 using namespace std;
@@ -61,7 +60,6 @@ void calculateScores() {
 		if(mxCnt >= 5) {
 			scoreForRoll[rollId][scores::yahtzee] = 50;
 		}
-
 		bool seenCnt3 = false, seenCnt2 = false;
 		for(int cnt : cnts) {
 			seenCnt2 |= (cnt == 2);
@@ -70,7 +68,6 @@ void calculateScores() {
 		if(seenCnt2 && seenCnt3) {
 			scoreForRoll[rollId][scores::fullHouse] = 25;
 		}
-
 		for(int straightLen = 4; straightLen <= 5; ++straightLen) {
 			for(int startVal = 1; startVal + straightLen - 1 <= 6; ++startVal) {
 				bool hasAll = true;
@@ -128,38 +125,15 @@ void initAllRolls() {
 	for(auto &roll : allRollsDistinguishable) {
 		++numberOfRoll[getRollId(roll)];
 	}
-	int sum = 0;
-	for(int i = 0; i < (int)allRollsIndistinguishable.size(); ++i) {
-		sum += numberOfRoll[i];
-	}
-	cout << "sum (should be 6^5): " << sum << " "<< pow6[5] << endl;
 }
 
-/*
-   dp[subset scores filled][num rerolls][roll] = max expected score
-
-   if rerolls == 0:
-       try all scores in "subset scores filled", and max with previous dp value
-
-   if rerolls > 0:
-       try all scores in "subset scores filled", and max with previous dp value
-
-	   and
-
-	   try every subset of die to re-roll and
-	   dp[subset scores][num rerolls - 1][new Re-rolled] = max(itself, average of dp values)
- */
-
+//maxEV[subset scores filled][num rerolls][roll] = max expected score
 double maxEV[1<<13][3][252];
 double averageMaxEV[1<<13];
-
 vector<pair<int,int>> cntReroll[252][1<<5];
 int tempCnt[252];
 
 void calcExpectedValue() {
-
-	bool debug = false;
-
 	cout << "hi1" << endl;
 	for(int roll = 0; roll < (int)allRollsIndistinguishable.size(); ++roll) {
 		for(int subsetRerolled = 0; subsetRerolled < (1<<5); ++subsetRerolled) {
@@ -187,31 +161,9 @@ void calcExpectedValue() {
 	}
 	cout << "hi2" << endl;
 
-	const int testSubsetFilled =
-		(1<<0) +
-		(1<<2) +
-		(1<<5) +
-		(1<<6) +
-		(1<<8) +
-		(1<<10) +
-		(1<<12);
-
-	vector<int> testRoll = {4,1,6,1,6};
-	int testRerolls = 2;
-	cout << "testSubsetFilled: " << testSubsetFilled << endl;
-
 	for(int subsetFilled = 1; subsetFilled < (1<<13); ++subsetFilled) {
 		for(int numberRerolls = 0; numberRerolls <= 2; ++numberRerolls) {
 			for(int roll = 0; roll < (int)allRollsIndistinguishable.size(); ++roll) {
-				if(debug) {
-					cout << "subsetFilled: " << subsetFilled << endl;
-					cout << "here, rollVector: ";
-					for(int val : allRollsIndistinguishable[roll]) cout << val << " ";
-					cout << endl;
-					cout << "numberRerolls: " << numberRerolls << endl;
-				}
-
-
 				double &currDp = maxEV[subsetFilled][numberRerolls][roll];
 
 				//take roll
@@ -235,22 +187,11 @@ void calcExpectedValue() {
 						currDp = max(currDp, sum / double(pow6[bits]));
 					}
 				}
-				if(debug) {
-					cout << "dp: " << currDp << endl;
-					cout << endl << endl;
-				}
-				if(subsetFilled == testSubsetFilled && numberRerolls == testRerolls && roll == getRollId(testRoll)) {
-					cout << "asdfasdfsaldkfjsldkfjasdlfjasdfj: " << currDp << endl;
-				}
-
 				if(numberRerolls == 2) {
 					averageMaxEV[subsetFilled] += numberOfRoll[roll] * currDp / double(pow6[5]);
 				}
 			}
 		}
-		//if(debug) {
-		cout << "subset values filled: " << subsetFilled << " averageMaxEV: " << averageMaxEV[subsetFilled] << endl;
-		//}
 	}
 }
 
@@ -258,8 +199,5 @@ int main() {
 	cout << setprecision(5) << fixed;
 	initAllRolls();
 	calculateScores();
-	cout << "after calculating scores" << endl;
-	cout << "before" << endl;
 	calcExpectedValue();
-	cout << "after" << endl;
 }
