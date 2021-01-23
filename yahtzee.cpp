@@ -180,11 +180,10 @@ void calcExpectedValue() {
 					for(int subsetRerolled = 0; subsetRerolled < (1<<5); ++subsetRerolled) {
 						//find average of expected values
 						double sum = 0;
-						const int bits = __builtin_popcount(subsetRerolled);
 						for(const auto &p : cntReroll[roll][subsetRerolled]) {
 							sum += p.first * maxEV[subsetFilled][numberRerolls-1][p.second];
 						}
-						currDp = max(currDp, sum / double(pow6[bits]));
+						currDp = max(currDp, sum / double(pow6[__builtin_popcount(subsetRerolled)]));
 					}
 				}
 				if(numberRerolls == 2) {
