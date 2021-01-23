@@ -68,7 +68,7 @@ void calculateScores() {
 			seenCnt3 |= (cnt == 3);
 		}
 		if(seenCnt2 && seenCnt3) {
-			scoreForRoll[rollId][scores::fullHouse] = sum;
+			scoreForRoll[rollId][scores::fullHouse] = 25;
 		}
 
 		for(int straightLen = 4; straightLen <= 5; ++straightLen) {
