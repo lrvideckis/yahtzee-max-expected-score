@@ -143,6 +143,10 @@ struct Move {
 	double evForMove;
 };
 
+bool operator<(const Move &x, const Move &y) {
+	return x.evForMove > y.evForMove;
+}
+
 vector<Move> transitions[1<<13][3][252];
 
 void calcExpectedValue() {
@@ -242,9 +246,88 @@ void calcExpectedValue() {
 	}
 }
 
+bool cmpSeconds(const pair<int,int> &x, const pair<int,int> &y) {
+	return x.second < y.second;
+}
+
+void inputOutput() {
+	vector<string> scoreDescription = {
+		"ones",
+		"twos",
+		"threes",
+		"fours",
+		"fives",
+		"sixes",
+		"three of a kind",
+		"four of a kind",
+		"full house",
+		"small straight",
+		"large straight",
+		"yahtzee",
+		"chance"
+	};
+	while(true) {
+		int sumFilledScores = 0;
+		int subsetFilled = 0;
+		for(int i = 0; i < 13; ++i) {
+			cout << "enter in score for " << scoreDescription[i] << " (or -1 for not filled yet): ";
+			int score;
+			cin >> score;
+			if(score >= 0) {
+				sumFilledScores += score;
+			} else {
+				subsetFilled += (1<<i);
+			}
+		}
+		cout << "enter in dice roll (ex: 2 4 6 3 2): " << endl;
+		vector<pair<int,int>> roll(5);
+		vector<int> rollInt(5);
+		for(int i = 0; i < 5; ++i) {
+			cin >> roll[i].first;
+			roll[i].second = i;
+			rollInt[i] = roll[i].first;
+		}
+		cout << "number of re-rolls left (0, 1, or 2): " << endl;
+		int rerolls;
+		cin >> rerolls;
+		cout << "max expected value: " << double(sumFilledScores) + maxEV[subsetFilled][rerolls][getRollId(rollInt)] << endl << endl;
+
+		vector<Move> &currTransitions = transitions[subsetFilled][rerolls][getRollId(rollInt)];
+		sort(currTransitions.begin(), currTransitions.end());
+
+		cout << "options are:" << endl;
+		for(const auto &currMove : currTransitions) {
+			if(currMove.subsetReroll == -1) {//score roll
+				cout << "Score roll as: " << scoreDescription[currMove.scoreTaken] << " giving " << double(sumFilledScores) + currMove.evForMove << " expected points." << endl;
+			} else {//re roll
+				assert(currMove.scoreTaken == -1);
+				cout << "Keep die:";
+				sort(roll.begin(), roll.end());
+				vector<bool> reroll(5,false);
+				for(int die = 0; die < 5; ++die) {
+					if(currMove.subsetReroll & (1<<die)) {
+						reroll[roll[die].second] = true;
+					}
+				}
+				sort(roll.begin(), roll.end(), cmpSeconds);
+				for(int die = 0; die < 5; ++die) {
+					if(reroll[die]) {
+						cout << " _";
+					} else {
+						cout << " " << roll[die].first;
+					}
+				}
+				cout << " and reroll giving " << double(sumFilledScores) + currMove.evForMove << " expected points." << endl;
+			}
+		}
+		cout << endl << endl;
+	}
+}
+
 int main() {
 	cout << setprecision(5) << fixed;
 	initAllRolls();
 	calculateScores();
 	calcExpectedValue();
+	inputOutput();
 }
