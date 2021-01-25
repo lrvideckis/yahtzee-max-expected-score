@@ -152,7 +152,7 @@ vector<Move> transitions[1<<13][3][252];
 void calcExpectedValue() {
 	for(int roll = 0; roll < (int)allRollsIndistinguishable.size(); ++roll) {
 		map<vector<int>,int> keptDieToSubset;
-		for(int subsetRerolled = 0; subsetRerolled < (1<<5); ++subsetRerolled) {
+		for(int subsetRerolled = 1; subsetRerolled < (1<<5); ++subsetRerolled) {
 			vector<int> keptDie;
 			for(int die = 0; die < 5; ++die) {
 				if((subsetRerolled&(1<<die)) == 0) {
