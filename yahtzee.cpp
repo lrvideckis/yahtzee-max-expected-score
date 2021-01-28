@@ -173,6 +173,7 @@ void calcExpectedValue() {
 		for(int subsetRerolled : distinctSubsetsForReroll[roll]) {
 			const int iters = pow6[__builtin_popcount(subsetRerolled)];
 			int sz = 0;
+			map<vector<int>, int> cnts;
 			for(int id = 0; id < iters; ++id) {
 				vector<int> newRoll = allRollsIndistinguishable[roll];
 				int ptr = 0;
@@ -183,8 +184,19 @@ void calcExpectedValue() {
 				}
 				//here, we have a triplet: (start roll, subset die re-rolled, end roll)
 				sort(newRoll.begin(), newRoll.end());
+				++cnts[newRoll];
 				tempRolls[sz++] = newRoll;
 			}
+			cout << "start roll: ";
+			for(int val : allRollsIndistinguishable[roll]) cout << val << " ";
+			cout << " subset: ";
+			for(int die = 0; die < 5; ++die) {
+				if(subsetRerolled&(1<<die)) {
+					cout << '1';
+				} else cout << '0';
+			}
+			cout << endl;
+			cout << "num distinct: " << cnts.size() << endl;
 			sort(tempRolls, tempRolls + sz);
 			for(int endRoll = 0; endRoll < 252; ++endRoll) {
 				tempCnt[endRoll] = 0;
