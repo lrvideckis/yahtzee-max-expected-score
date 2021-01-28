@@ -150,6 +150,8 @@ bool operator<(const Move &x, const Move &y) {
 vector<Move> transitions[1<<13][3][252];
 
 void calcExpectedValue() {
+	cout << "hi1" << endl;
+	auto start = high_resolution_clock::now();
 	for(int roll = 0; roll < (int)allRollsIndistinguishable.size(); ++roll) {
 		map<vector<int>,int> keptDieToSubset;
 		for(int subsetRerolled = 1; subsetRerolled < (1<<5); ++subsetRerolled) {
@@ -167,8 +169,6 @@ void calcExpectedValue() {
 		}
 	}
 
-	cout << "hi1" << endl;
-	auto start = high_resolution_clock::now();
 	for(int roll = 0; roll < (int)allRollsIndistinguishable.size(); ++roll) {
 		for(int subsetRerolled : distinctSubsetsForReroll[roll]) {
 			const int iters = pow6[__builtin_popcount(subsetRerolled)];
@@ -187,16 +187,20 @@ void calcExpectedValue() {
 				++cnts[newRoll];
 				tempRolls[sz++] = newRoll;
 			}
-			cout << "start roll: ";
-			for(int val : allRollsIndistinguishable[roll]) cout << val << " ";
-			cout << " subset: ";
-			for(int die = 0; die < 5; ++die) {
-				if(subsetRerolled&(1<<die)) {
-					cout << '1';
-				} else cout << '0';
+			/*
+			if(__builtin_popcount(subsetRerolled) == 4) {
+				cout << "start roll: ";
+				for(int val : allRollsIndistinguishable[roll]) cout << val << " ";
+				cout << " subset: ";
+				for(int die = 0; die < 5; ++die) {
+					if(subsetRerolled&(1<<die)) {
+						cout << '1';
+					} else cout << '0';
+				}
+				cout << endl;
+				cout << "num distinct: " << cnts.size() << endl;
 			}
-			cout << endl;
-			cout << "num distinct: " << cnts.size() << endl;
+			*/
 			sort(tempRolls, tempRolls + sz);
 			for(int endRoll = 0; endRoll < 252; ++endRoll) {
 				tempCnt[endRoll] = 0;
@@ -220,7 +224,9 @@ void calcExpectedValue() {
 	cout << "duration in seconds: " << duration.count()/double(1000 * 1000) << endl;
 
 	for(int subsetFilled = 1; subsetFilled < (1<<13); ++subsetFilled) {
+		double sumForPreviousRow = 0;
 		for(int numberRerolls = 0; numberRerolls <= 2; ++numberRerolls) {
+			double newSumForPreviousRow = 0;
 			for(int roll = 0; roll < (int)allRollsIndistinguishable.size(); ++roll) {
 				double &currDp = maxEV[subsetFilled][numberRerolls][roll];
 				vector<Move> &currTransitions = transitions[subsetFilled][numberRerolls][roll];
@@ -239,23 +245,34 @@ void calcExpectedValue() {
 					//for each subset of die that you can re-roll
 					for(int subsetRerolled : distinctSubsetsForReroll[roll]) {
 						//find average of expected values
-						double sum = 0;
-						for(const auto &p : cntReroll[roll][subsetRerolled]) {
-							sum += p.first * maxEV[subsetFilled][numberRerolls-1][p.second];
+						double nextScore = 0;
+						if(subsetRerolled == 31) {
+							nextScore = sumForPreviousRow / double(pow6[5]);
+						} else {
+							for(const auto &p : cntReroll[roll][subsetRerolled]) {
+								nextScore += p.first * maxEV[subsetFilled][numberRerolls-1][p.second];
+							}
+							nextScore /= double(pow6[__builtin_popcount(subsetRerolled)]);
 						}
-						const double nextScore = sum / double(pow6[__builtin_popcount(subsetRerolled)]);
 						currTransitions.push_back({subsetRerolled,-1,nextScore});
 						currDp = max(currDp, nextScore);
 					}
 				}
 
+				newSumForPreviousRow += numberOfRoll[roll] * currDp;
 				if(numberRerolls == 2) {
 					averageMaxEV[subsetFilled] += numberOfRoll[roll] * currDp / double(pow6[5]);
 				}
 			}
+			sumForPreviousRow = newSumForPreviousRow;
 		}
 		cout << "subsetFilled: " << subsetFilled << " averageMaxEV: " << averageMaxEV[subsetFilled] << endl;
 	}
+	auto stop2 = high_resolution_clock::now();
+	duration = duration_cast<microseconds>(stop2 - stop);
+	cout << "duration in seconds: " << duration.count()/double(1000 * 1000) << endl;
+
+	cout << "hi3" << endl;
 }
 
 bool cmpSeconds(const pair<int,int> &x, const pair<int,int> &y) {
@@ -341,5 +358,5 @@ int main() {
 	initAllRolls();
 	calculateScores();
 	calcExpectedValue();
-	inputOutput();
+	//inputOutput();
 }
