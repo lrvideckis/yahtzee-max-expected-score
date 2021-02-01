@@ -9,8 +9,7 @@ TODOs:
 2. implement multiple Yahtzees (each worth 100 points)
 3. implement a GUI (similar to below website), and/or think of better way to do IO
 4. add monte-carlo style test: test that average score of many rounds (playing optimally) gives 229.63850 points
-5. refactor code to be more readable
-6. add comments to code to make it more understandable
+5. refactor/comment code to be more readable
 
 I tested the program by comparing values with this website: http://www-set.win.tue.nl/~wstomv/misc/yahtzee/osyp.php
 
