@@ -12,6 +12,7 @@ TODOs:
 5. still can make it run faster by playing around with dp-trick done during transitions
 6. refactor/comment code to be more readable - include detailed description of approach
 7. add file with interesting stats, ex: list of all possible starting rolls, sorted by expected value
+8. nit: it runs in ~6 seconds on laptop, so update expected run time print statement to 4-7 seconds
 
 I tested the program by comparing values with this website: http://www-set.win.tue.nl/~wstomv/misc/yahtzee/osyp.php
 
