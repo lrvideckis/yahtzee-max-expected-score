@@ -11,9 +11,9 @@ example run:
 Calculating expected values, should take 3-4 seconds... Finished in 3.21408 seconds.
 
 The maximum expected score for a single Yahtzee round is
-229.63850 points. This is low as the program doesn't
-consider multiple yahtzees, or the +35 point bonus for scoreing >= 63
-points in the top section.
+229.63850 points. This is lower than the true value as
+the program doesn't consider multiple yahtzees (each worth 100 points), or
+the +35 point bonus for scoring >= 63 points in the top section.
 
 enter in score for ones (or -1 for not filled yet).............. -1
 enter in score for twos (or -1 for not filled yet).............. -1
