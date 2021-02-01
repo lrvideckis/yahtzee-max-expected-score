@@ -1,1 +1,1 @@
-g++ -std=c++17 -O2 yahtzee.cpp
+g++ -std=c++17 -O2 yahtzee.cpp -o yahtzee.out

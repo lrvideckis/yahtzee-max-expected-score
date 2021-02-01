@@ -2,4 +2,5 @@
 
 This repo contains code to calculate max expected score for yatzee. I will test my code with this website: http://www-set.win.tue.nl/~wstomv/misc/yahtzee/osyp.php
 
-compile by running compile.sh: `$bash compile.sh`
+compile: `bash compile.sh`
+run: `./yahtzee.out`

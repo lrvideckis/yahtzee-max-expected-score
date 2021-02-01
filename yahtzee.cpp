@@ -101,7 +101,7 @@ int getRollId(vector<int> roll) {
 		assert(1 <= roll[i] && roll[i] <= 6);
 	}
 	sort(roll.begin(), roll.end());
-	auto it = lower_bound(allRollsIndistinguishable.begin(), allRollsIndistinguishable.end(), roll);
+	const auto it = lower_bound(allRollsIndistinguishable.begin(), allRollsIndistinguishable.end(), roll);
 	assert(*it == roll);
 	return lower_bound(allRollsIndistinguishable.begin(), allRollsIndistinguishable.end(), roll) - allRollsIndistinguishable.begin();
 }
@@ -129,7 +129,7 @@ void initAllRolls() {
 	sort(allRollsIndistinguishable.begin(), allRollsIndistinguishable.end());
 	allRollsIndistinguishable.erase(unique(allRollsIndistinguishable.begin(), allRollsIndistinguishable.end()), allRollsIndistinguishable.end());
 	assert(allRollsIndistinguishable.size() == 252);
-	for(auto &roll : allRollsDistinguishable) {
+	for(const auto &roll : allRollsDistinguishable) {
 		++numberOfRoll[getRollId(roll)];
 	}
 }
@@ -156,6 +156,7 @@ vector<Move> transitions[1<<13][3][252];
 vector<pair<int,int>> rollToSubsetKeptCnts[252];
 
 void calcExpectedValue() {
+	cout << "Calculating expected values, should take 3-4 seconds." << endl;
 	auto start = high_resolution_clock::now();
 
 	vector<vector<int>> allDieKept;
@@ -298,7 +299,7 @@ void calcExpectedValue() {
 	}
 	auto stop = high_resolution_clock::now();
 	auto duration = duration_cast<microseconds>(stop - start);
-	cout << "duration in seconds: " << duration.count()/double(1000 * 1000) << endl;
+	cout << "Finished in " << duration.count()/double(1000 * 1000) << " seconds." << endl;
 }
 
 bool cmpSeconds(const pair<int,int> &x, const pair<int,int> &y) {
