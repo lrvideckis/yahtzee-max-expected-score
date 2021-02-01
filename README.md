@@ -1,7 +1,5 @@
 # Yahtzee Max Expected Score
 
-
-
 This repo contains code to calculate max expected score for yatzee. I will test my code with this website: http://www-set.win.tue.nl/~wstomv/misc/yahtzee/osyp.php
 
 compile: `bash compile.sh`
@@ -10,6 +8,13 @@ run: `./yahtzee.out`
 example run:
 
 ```
+Calculating expected values, should take 3-4 seconds... Finished in 3.21408 seconds.
+
+The maximum expected score for a single Yahtzee round is
+229.63850 points. This is low as the program doesn't
+consider multiple yahtzees, or the +35 point bonus for scoreing >= 63
+points in the top section.
+
 enter in score for ones (or -1 for not filled yet).............. -1
 enter in score for twos (or -1 for not filled yet).............. -1
 enter in score for threes (or -1 for not filled yet)............ 9
@@ -56,4 +61,7 @@ Score roll as yahtzee giving 202.96577 expected points.
 Score roll as fives giving 201.59302 expected points.
 Score roll as four of a kind giving 198.13692 expected points.
 Score roll as small straight giving 182.61921 expected points.
+
+
+enter in score for ones (or -1 for not filled yet)..............
 ```
