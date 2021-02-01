@@ -10,7 +10,7 @@ TODOs:
 3. implement a GUI (similar to below website), and/or think of better way to do IO
 4. add monte-carlo style test: test that average score of many rounds (playing optimally) gives 229.63850 points
 5. still can make it run faster by playing around with dp-trick done during transitions
-6. refactor/comment code to be more readable
+6. refactor/comment code to be more readable - include detailed description of approach
 7. add file with interesting stats, ex: list of all possible starting rolls, sorted by expected value
 
 I tested the program by comparing values with this website: http://www-set.win.tue.nl/~wstomv/misc/yahtzee/osyp.php
