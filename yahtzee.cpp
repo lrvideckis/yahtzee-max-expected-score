@@ -302,9 +302,9 @@ void calcExpectedValue() {
 	auto duration = duration_cast<microseconds>(stop - start);
 	cout << "Finished in " << duration.count()/double(1000 * 1000) << " seconds." << endl << endl;
 	cout << "The maximum expected score for a single Yahtzee round is " << endl <<
-		averageMaxEV[(1<<13)-1] << " points. This is low as the program doesn't " << endl <<
-		"consider multiple yahtzees, or the +35 point bonus for scoreing >= 63 " << endl <<
-		"points in the top section." << endl << endl;
+		averageMaxEV[(1<<13)-1] << " points. This is lower than the true value as " << endl <<
+		"the program doesn't consider multiple yahtzees (each worth 100 points), or" << endl <<
+		"the +35 point bonus for scoreing >= 63 points in the top section." << endl << endl;
 }
 
 bool cmpSeconds(const pair<int,int> &x, const pair<int,int> &y) {
