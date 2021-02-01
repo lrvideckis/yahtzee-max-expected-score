@@ -1,6 +1,14 @@
-# Yahtzee Max Expected Score
+# Yahtzee Maximum Expected Score
 
-This repo contains code to calculate max expected score for yatzee. I will test my code with this website: http://www-set.win.tue.nl/~wstomv/misc/yahtzee/osyp.php
+This repo contains code to:
+1. calculate maximum expected score for a single Yahtzee round
+2. give a list of all options, and the expected number of points for this option
+
+TODOs:
+1. implement 35 point bonus for getting >= 63 points on first section
+2. implement multiple Yahtzees (each worth 100 points)
+
+I tested the program by comparing values with this website: http://www-set.win.tue.nl/~wstomv/misc/yahtzee/osyp.php
 
 compile: `bash compile.sh`
 run: `./yahtzee.out`
