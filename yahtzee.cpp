@@ -5,6 +5,7 @@
 #include <iostream>
 #include <algorithm>
 #include <vector>
+#include <string>
 #include <map>
 #include <cassert>
 #include <iomanip>
@@ -156,7 +157,7 @@ vector<Move> transitions[1<<13][3][252];
 vector<pair<int,int>> rollToSubsetKeptCnts[252];
 
 void calcExpectedValue() {
-	cout << "Calculating expected values, should take 3-4 seconds." << endl;
+	cout << "Calculating expected values, should take 3-4 seconds... " << flush;
 	auto start = high_resolution_clock::now();
 
 	vector<vector<int>> allDieKept;
@@ -299,7 +300,11 @@ void calcExpectedValue() {
 	}
 	auto stop = high_resolution_clock::now();
 	auto duration = duration_cast<microseconds>(stop - start);
-	cout << "Finished in " << duration.count()/double(1000 * 1000) << " seconds." << endl;
+	cout << "Finished in " << duration.count()/double(1000 * 1000) << " seconds." << endl << endl;
+	cout << "The maximum expected score for a single Yahtzee round is " << endl <<
+		averageMaxEV[(1<<13)-1] << " points. This is low as the program doesn't " << endl <<
+		"consider multiple yahtzees, or the +35 point bonus for scoreing >= 63 " << endl <<
+		"points in the top section." << endl << endl;
 }
 
 bool cmpSeconds(const pair<int,int> &x, const pair<int,int> &y) {
@@ -326,7 +331,8 @@ void inputOutput() {
 		int sumFilledScores = 0;
 		int subsetFilled = 0;
 		for(int i = 0; i < 13; ++i) {
-			cout << "enter in score for " << scoreDescription[i] << " (or -1 for not filled yet): ";
+			cout << "enter in score for " << scoreDescription[i] << " (or -1 for not filled yet)";
+			cout << string(18 - (int)scoreDescription[i].size(), '.') << ' ';
 			int score;
 			cin >> score;
 			if(score >= 0) {
@@ -335,7 +341,7 @@ void inputOutput() {
 				subsetFilled += (1<<i);
 			}
 		}
-		cout << "enter in dice roll (ex: 2 4 6 3 2): " << endl;
+		cout << "enter in dice roll (ex: 2 4 6 3 2)" << string(30, '.') << ' ';
 		vector<pair<int,int>> roll(5);
 		vector<int> rollInt(5);
 		for(int i = 0; i < 5; ++i) {
@@ -343,21 +349,20 @@ void inputOutput() {
 			roll[i].second = i;
 			rollInt[i] = roll[i].first;
 		}
-		cout << "number of re-rolls left (0, 1, or 2): " << endl;
+		cout << "number of re-rolls left (0, 1, or 2)" << string(28, '.') << ' ';
 		int rerolls;
 		cin >> rerolls;
-		cout << "max expected value: " << double(sumFilledScores) + maxEV[subsetFilled][rerolls][getRollId(rollInt)] << endl << endl;
 
 		vector<Move> &currTransitions = transitions[subsetFilled][rerolls][getRollId(rollInt)];
 		sort(currTransitions.begin(), currTransitions.end());
 
-		cout << "options are:" << endl;
+		cout << endl << "Options are:" << endl;
 		for(const auto &currMove : currTransitions) {
 			if(currMove.subsetReroll == -1) {//score roll
-				cout << "Score roll as: " << scoreDescription[currMove.scoreTaken] << " giving " << double(sumFilledScores) + currMove.evForMove << " expected points." << endl;
+				cout << "Score roll as " << scoreDescription[currMove.scoreTaken] << " giving " << double(sumFilledScores) + currMove.evForMove << " expected points." << endl;
 			} else {//re roll
 				assert(currMove.scoreTaken == -1);
-				cout << "Keep die:";
+				cout << "Keep die";
 				sort(roll.begin(), roll.end());
 				vector<bool> reroll(5,false);
 				for(int die = 0; die < 5; ++die) {
