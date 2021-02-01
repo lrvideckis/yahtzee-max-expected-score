@@ -2,7 +2,7 @@
 
 This repo contains code to:
 1. calculate maximum expected score for a single Yahtzee round
-2. give a list of all options, and the expected number of points for this option
+2. give a list of all options for an inputted situation, and the expected number of points for this option
 
 TODOs:
 1. implement 35 point bonus for getting >= 63 points on first section
