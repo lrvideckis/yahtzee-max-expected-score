@@ -4,16 +4,6 @@ This repo contains code to:
 1. calculate maximum expected score for a single Yahtzee round
 2. give a list of all options for an inputted situation, and the expected number of points for each option
 
-TODOs:
-1. implement 35 point bonus for getting >= 63 points on first section
-2. implement multiple Yahtzees (each worth 100 points)
-3. implement a GUI (similar to below website), and/or think of better way to do IO
-4. add monte-carlo style test: test that average score of many rounds (playing optimally) gives 229.63850 points
-5. still can make it run faster by playing around with dp-trick done during transitions
-6. refactor/comment code to be more readable - include detailed description of approach
-7. add file with interesting stats, ex: list of all possible starting rolls, sorted by expected value
-8. nit: it runs in ~6 seconds on laptop, so update expected run time print statement to 4-7 seconds
-
 I tested the program by comparing values with this website: http://www-set.win.tue.nl/~wstomv/misc/yahtzee/osyp.php
 
 compile: `bash compile.sh`
