@@ -6,7 +6,7 @@ This repo contains code to:
 
 I tested the program by comparing values with this website: http://www-set.win.tue.nl/~wstomv/misc/yahtzee/osyp.php
 
-compile: `bash compile.sh`
+compile: `./compile.sh`
 run: `./yahtzee.out`
 
 example run:
