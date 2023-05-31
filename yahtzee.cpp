@@ -98,7 +98,7 @@ int getRollId(vector<int> roll) {
     sort(roll.begin(), roll.end());
     const auto it = lower_bound(allRollsIndistinguishable.begin(), allRollsIndistinguishable.end(), roll);
     assert(*it == roll);
-    return lower_bound(allRollsIndistinguishable.begin(), allRollsIndistinguishable.end(), roll) - allRollsIndistinguishable.begin();
+    return it - allRollsIndistinguishable.begin();
 }
 
 int numberOfRoll[252];
