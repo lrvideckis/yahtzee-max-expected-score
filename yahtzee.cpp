@@ -33,7 +33,7 @@ int scoreForRoll[252][13];
 vector<vector<int>> allRollsIndistinguishable;
 vector<vector<int>> allRollsDistinguishable;
 
-//scoreForRoll[i][j] = the score for roll with rollID=i if it counds for
+//scoreForRoll[i][j] = the score for roll with rollID=i if it counts for
 //scores::x s.t. scores::x==j
 void calculateScores() {
     for (int rollId = 0; rollId < (int)allRollsIndistinguishable.size(); ++rollId) {
