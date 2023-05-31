@@ -178,7 +178,7 @@ void calcExpectedValue() {
         for (int rollID = 0; rollID < 252; ++rollID) {
             for (int dieKeptID = 0; dieKeptID < (int)allDieKept.size(); ++dieKeptID) {
                 if (rerollCnts[dieKeptID][rollID] > 0) {
-                    rollToSubsetKeptCnts[rollID].push_back({dieKeptID, rerollCnts[dieKeptID][rollID]});
+                    rollToSubsetKeptCnts[rollID].emplace_back(dieKeptID, rerollCnts[dieKeptID][rollID]);
                 }
             }
         }
@@ -225,7 +225,7 @@ void calcExpectedValue() {
             }
             for (int endRoll = 0; endRoll < 252; ++endRoll) {
                 if (tempCnt[endRoll] > 0) {
-                    cntReroll[roll][subsetRerolled].push_back({tempCnt[endRoll], endRoll});
+                    cntReroll[roll][subsetRerolled].emplace_back(tempCnt[endRoll], endRoll);
                 }
             }
         }
