@@ -124,8 +124,6 @@ void initAllRolls() {
 //maxEV[subset scores filled][num rerolls][roll] = max expected score
 double maxEV[1 << 13][3][252];
 double averageMaxEV[1 << 13];
-vector<int> distinctSubsetsForReroll[252];
-vector<pair<int, int>> cntReroll[252][1 << 5];
 
 struct Move {
     int subsetReroll, scoreTaken;
@@ -141,6 +139,7 @@ vector<Move> transitions[1 << 13][3][252];
 void calcExpectedValue() {
     cout << "Calculating expected values... " << flush;
     auto start = high_resolution_clock::now();
+    vector<vector<int>> distinctSubsetsForReroll(252);
     for (int roll = 0; roll < (int)allRollsIndistinguishable.size(); ++roll) {
         map<vector<int>, int> keptDieToSubset;
         for (int subsetRerolled = 1; subsetRerolled < (1 << 5); ++subsetRerolled) {
@@ -155,6 +154,7 @@ void calcExpectedValue() {
         for (auto& p : keptDieToSubset)
             distinctSubsetsForReroll[roll].push_back(p.second);
     }
+    vector<vector<vector<pair<int, int>>>> cntReroll(252, vector<vector<pair<int, int>>>(1 << 5));
     for (int roll = 0; roll < (int)allRollsIndistinguishable.size(); ++roll) {
         for (int subsetRerolled : distinctSubsetsForReroll[roll]) {
             const int iters = pow6[__builtin_popcount(subsetRerolled)];
