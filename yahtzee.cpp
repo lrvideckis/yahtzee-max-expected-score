@@ -1,7 +1,3 @@
-#pragma GCC optimize("Ofast")
-#pragma GCC optimize("unroll-loops")
-#pragma GCC target("sse,sse2,sse3,ssse3,sse4,popcnt,abm,mmx,avx")
-
 #include <iostream>
 #include <algorithm>
 #include <vector>
@@ -13,8 +9,6 @@
 using namespace std;
 using namespace std::chrono;
 
-//TODO: handle multiple yahtzee's
-//TODO: handle +35 points if score of first part is >= 63
 enum scores {
     //top part
     ones,
