@@ -1,6 +1,7 @@
 #include <iostream>
 #include <algorithm>
 #include <vector>
+#include <array>
 #include <string>
 #include <map>
 #include <cassert>
@@ -30,15 +31,16 @@ enum scores {
 
 int scoreForRoll[252][13];
 
-vector<vector<int>> allRollsIndistinguishable;
-vector<vector<int>> allRollsDistinguishable;
+vector<array<int, 5>> allRollsIndistinguishable;
+vector<array<int, 5>> allRollsDistinguishable;
 
 //scoreForRoll[i][j] = the score for roll with rollID=i if it counts for
 //scores::x s.t. scores::x==j
 void calculateScores() {
     for (int rollId = 0; rollId < (int)allRollsIndistinguishable.size(); ++rollId) {
-        const vector<int>& roll = allRollsIndistinguishable[rollId];
-        vector<int> cnts(7, 0);
+        const array<int, 5>& roll = allRollsIndistinguishable[rollId];
+        array<int, 7> cnts;
+        fill(cnts.begin(), cnts.end(), 0);
         int mxCnt = 0;
         int sum = 0;
         for (int val : roll) {
@@ -85,8 +87,7 @@ void calculateScores() {
     }
 }
 
-int getRollId(vector<int> roll) {
-    assert(roll.size() == 5);
+int getRollId(array<int, 5> roll) {
     for (int i = 0; i < (int)roll.size(); ++i)
         assert(1 <= roll[i] && roll[i] <= 6);
     sort(roll.begin(), roll.end());
@@ -104,7 +105,7 @@ void initAllRolls() {
         pow6[i] = 6 * pow6[i - 1];
     for (int rollVal = 0; rollVal < pow6[5]; ++rollVal) {
         int temp = rollVal;
-        vector<int> roll(5);
+        array<int, 5> roll;
         for (int i = 0; i < 5; ++i) {
             roll[i] = temp % 6 + 1;
             temp /= 6;
@@ -126,7 +127,7 @@ double averageMaxEV[1 << 13];
 vector<pair<int, int>> distinctSubsetsForReroll[252];
 vector<pair<int, int>> cntReroll[252][1 << 5];
 int tempCnt[252];
-vector<int> tempRolls[7776];
+array<int, 5> tempRolls[7776];
 
 struct Move {
     int subsetReroll, scoreTaken;
@@ -163,10 +164,13 @@ void calcExpectedValue() {
             const int numReroll = 5 - (int)dieKept.size();
             const int iters = pow6[numReroll];
             for (int id = 0; id < iters; ++id) {
-                vector<int> newRoll = dieKept;
+                array<int, 5> newRoll;
+                int newRollSz = 0;
+                for (int val : dieKept)
+                    newRoll[newRollSz++] = val;
                 for (int i = 0; i < numReroll; ++i)
-                    newRoll.push_back(allRollsDistinguishable[id][i]);
-                assert(newRoll.size() == 5);
+                    newRoll[newRollSz++] = allRollsDistinguishable[id][i];
+                assert(newRollSz == 5);
                 sort(newRoll.begin(), newRoll.end());
                 ++rerollCnts[dieKeptID][getRollId(newRoll)];
             }
@@ -197,9 +201,9 @@ void calcExpectedValue() {
         for (auto [subsetRerolled, keptDieID] : distinctSubsetsForReroll[roll]) {
             const int iters = pow6[__builtin_popcount(subsetRerolled)];
             int sz = 0;
-            map<vector<int>, int> cnts;
+            map<array<int, 5>, int> cnts;
             for (int id = 0; id < iters; ++id) {
-                vector<int> newRoll = allRollsIndistinguishable[roll];
+                array<int, 5> newRoll = allRollsIndistinguishable[roll];
                 int ptr = 0;
                 for (int die = 0; die < 5; ++die) {
                     if (subsetRerolled & (1 << die))
@@ -312,7 +316,7 @@ void inputOutput() {
         }
         cout << "enter in dice roll (ex: 2 4 6 3 2)" << string(30, '.') << ' ';
         vector<pair<int, int>> roll(5);
-        vector<int> rollInt(5);
+        array<int, 5> rollInt;
         for (int i = 0; i < 5; ++i) {
             cin >> roll[i].first;
             roll[i].second = i;
