@@ -140,62 +140,36 @@ bool operator<(const Move& x, const Move& y) {
 
 vector<Move> transitions[1 << 13][3][252];
 
-vector<pair<int, int>> rollToSubsetKeptCnts[252];
-
 void calcExpectedValue() {
-    cout << "Calculating expected values, should take 3-4 seconds... " << flush;
+    cout << "Calculating expected values... " << flush;
     auto start = high_resolution_clock::now();
-    vector<vector<int>> allDieKept;
-    for (int i = 0; i < 36; ++i) {
-        int die1 = allRollsDistinguishable[i][0];
-        int die2 = allRollsDistinguishable[i][1];
-        if (die1 > die2) swap(die1, die2);
-        allDieKept.push_back({});
-        allDieKept.push_back({die1});
-        allDieKept.push_back({die1, die2});
-    }
-    sort(allDieKept.begin(), allDieKept.end());
-    allDieKept.erase(unique(allDieKept.begin(), allDieKept.end()), allDieKept.end());
-    assert(allDieKept.size() == 28);
     {
-        vector<vector<int>> rerollCnts(28, vector<int>(252, 0));
-        for (int dieKeptID = 0; dieKeptID < (int)allDieKept.size(); ++dieKeptID) {
-            const auto& dieKept = allDieKept[dieKeptID];
-            const int numReroll = 5 - (int)dieKept.size();
-            const int iters = pow6[numReroll];
-            for (int id = 0; id < iters; ++id) {
-                array<int, 5> newRoll;
-                int newRollSz = 0;
-                for (int val : dieKept)
-                    newRoll[newRollSz++] = val;
-                for (int i = 0; i < numReroll; ++i)
-                    newRoll[newRollSz++] = allRollsDistinguishable[id][i];
-                assert(newRollSz == 5);
-                sort(newRoll.begin(), newRoll.end());
-                ++rerollCnts[dieKeptID][getRollId(newRoll)];
-            }
+        vector<vector<int>> allDieKept;
+        for (int i = 0; i < 36; ++i) {
+            int die1 = allRollsDistinguishable[i][0];
+            int die2 = allRollsDistinguishable[i][1];
+            if (die1 > die2) swap(die1, die2);
+            allDieKept.push_back({});
+            allDieKept.push_back({die1});
+            allDieKept.push_back({die1, die2});
         }
-        for (int rollID = 0; rollID < 252; ++rollID) {
-            for (int dieKeptID = 0; dieKeptID < (int)allDieKept.size(); ++dieKeptID) {
-                if (rerollCnts[dieKeptID][rollID] > 0) {
-                    rollToSubsetKeptCnts[rollID].emplace_back(dieKeptID, rerollCnts[dieKeptID][rollID]);
+        sort(allDieKept.begin(), allDieKept.end());
+        allDieKept.erase(unique(allDieKept.begin(), allDieKept.end()), allDieKept.end());
+        assert(allDieKept.size() == 28);
+        for (int roll = 0; roll < (int)allRollsIndistinguishable.size(); ++roll) {
+            map<vector<int>, pair<int, int>> keptDieToSubset;
+            for (int subsetRerolled = 1; subsetRerolled < (1 << 5); ++subsetRerolled) {
+                vector<int> keptDie;
+                for (int die = 0; die < 5; ++die) {
+                    if ((subsetRerolled & (1 << die)) == 0)
+                        keptDie.push_back(allRollsIndistinguishable[roll][die]);
                 }
+                sort(keptDie.begin(), keptDie.end());
+                keptDieToSubset[keptDie] = {subsetRerolled, lower_bound(allDieKept.begin(), allDieKept.end(), keptDie) - allDieKept.begin()};
             }
+            for (auto& p : keptDieToSubset)
+                distinctSubsetsForReroll[roll].push_back(p.second);
         }
-    }
-    for (int roll = 0; roll < (int)allRollsIndistinguishable.size(); ++roll) {
-        map<vector<int>, pair<int, int>> keptDieToSubset;
-        for (int subsetRerolled = 1; subsetRerolled < (1 << 5); ++subsetRerolled) {
-            vector<int> keptDie;
-            for (int die = 0; die < 5; ++die) {
-                if ((subsetRerolled & (1 << die)) == 0)
-                    keptDie.push_back(allRollsIndistinguishable[roll][die]);
-            }
-            sort(keptDie.begin(), keptDie.end());
-            keptDieToSubset[keptDie] = {subsetRerolled, lower_bound(allDieKept.begin(), allDieKept.end(), keptDie) - allDieKept.begin()};
-        }
-        for (auto& p : keptDieToSubset)
-            distinctSubsetsForReroll[roll].push_back(p.second);
     }
     for (int roll = 0; roll < (int)allRollsIndistinguishable.size(); ++roll) {
         for (auto [subsetRerolled, keptDieID] : distinctSubsetsForReroll[roll]) {
@@ -224,16 +198,13 @@ void calcExpectedValue() {
                 ++tempCnt[ptr];
             }
             for (int endRoll = 0; endRoll < 252; ++endRoll) {
-                if (tempCnt[endRoll] > 0) {
+                if (tempCnt[endRoll] > 0)
                     cntReroll[roll][subsetRerolled].emplace_back(tempCnt[endRoll], endRoll);
-                }
             }
         }
     }
     for (int subsetFilled = 1; subsetFilled < (1 << 13); ++subsetFilled) {
-        vector<double> sumOfDpValsForSubsetKept(28, 0.0);
         for (int numberRerolls = 0; numberRerolls <= 2; ++numberRerolls) {
-            vector<double> newSumOfDpVals(28, 0.0);
             for (int roll = 0; roll < (int)allRollsIndistinguishable.size(); ++roll) {
                 double& currDp = maxEV[subsetFilled][numberRerolls][roll];
                 vector<Move>& currTransitions = transitions[subsetFilled][numberRerolls][roll];
@@ -251,12 +222,8 @@ void calcExpectedValue() {
                     for (auto [subsetRerolled, keptDieID] : distinctSubsetsForReroll[roll]) {
                         //find average of expected values
                         double nextScore = 0;
-                        if (__builtin_popcount(subsetRerolled) >= 3)
-                            nextScore = sumOfDpValsForSubsetKept[keptDieID];
-                        else {
-                            for (auto [cnt, endRoll] : cntReroll[roll][subsetRerolled])
-                                nextScore += cnt * maxEV[subsetFilled][numberRerolls - 1][endRoll];
-                        }
+                        for (auto [cnt, endRoll] : cntReroll[roll][subsetRerolled])
+                            nextScore += cnt * maxEV[subsetFilled][numberRerolls - 1][endRoll];
                         nextScore /= double(pow6[__builtin_popcount(subsetRerolled)]);
                         currTransitions.push_back({subsetRerolled, -1, nextScore});
                         currDp = max(currDp, nextScore);
@@ -264,12 +231,7 @@ void calcExpectedValue() {
                 }
                 if (numberRerolls == 2)
                     averageMaxEV[subsetFilled] += numberOfRoll[roll] * currDp / double(pow6[5]);
-                else {
-                    for (auto [subsetKeptID, cnt] : rollToSubsetKeptCnts[roll])
-                        newSumOfDpVals[subsetKeptID] += cnt * currDp;
-                }
             }
-            sumOfDpValsForSubsetKept = newSumOfDpVals;
         }
     }
     auto stop = high_resolution_clock::now();
