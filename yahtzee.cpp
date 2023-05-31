@@ -96,11 +96,11 @@ int getRollId(vector<int> roll) {
 }
 
 int numberOfRoll[252];
-int pow6[7];
+int pow6[6];
 
 void initAllRolls() {
     pow6[0] = 1;
-    for (int i = 1; i < 7; ++i)
+    for (int i = 1; i < 6; ++i)
         pow6[i] = 6 * pow6[i - 1];
     for (int rollVal = 0; rollVal < pow6[5]; ++rollVal) {
         int temp = rollVal;
