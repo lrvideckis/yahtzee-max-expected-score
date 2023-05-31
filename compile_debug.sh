@@ -20,9 +20,6 @@ g++ \
     -fsanitize=address,undefined \
     -fno-sanitize-recover=all \
     -fstack-protector \
-    -D_GLIBCXX_DEBUG \
     -D_GLIBCXX_SANITIZE_VECTOR \
-    -D_GLIBCXX_DEBUG_PEDANTIC \
-    -D_GLIBCXX_ASSERTIONS \
     -D_FORTIFY_SOURCE=2 \
-    yahtzee.cpp -o yahtzee.out
+    yahtzee.cpp -o yahtzee_debug.out

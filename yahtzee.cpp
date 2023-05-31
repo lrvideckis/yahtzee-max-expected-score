@@ -92,7 +92,7 @@ int getRollId(vector<int> roll) {
     sort(roll.begin(), roll.end());
     const auto it = lower_bound(allRollsIndistinguishable.begin(), allRollsIndistinguishable.end(), roll);
     assert(*it == roll);
-    return it - allRollsIndistinguishable.begin();
+    return int(it - allRollsIndistinguishable.begin());
 }
 
 int numberOfRoll[252];
@@ -270,7 +270,7 @@ void calcExpectedValue() {
     }
     auto stop = high_resolution_clock::now();
     auto duration = duration_cast<microseconds>(stop - start);
-    cout << "Finished in " << duration.count() / double(1000 * 1000) << " seconds." << endl << endl;
+    cout << "Finished in " << double(duration.count()) / double(1000 * 1000) << " seconds." << endl << endl;
     cout << "The maximum expected score for a single Yahtzee round is" << endl <<
          averageMaxEV[(1 << 13) - 1] << " points. This is lower than the true value as" << endl <<
          "the program doesn't consider multiple yahtzees (each worth 100 points), or" << endl <<
