@@ -29,13 +29,13 @@ enum scores {
     chance
 };
 
+//scoreForRoll[i][j] = the score for roll with rollID=i if it counts for
+//scores::x s.t. scores::x==j
 int scoreForRoll[252][13];
 
 vector<array<int, 5>> allRollsIndistinguishable;
 vector<array<int, 5>> allRollsDistinguishable;
 
-//scoreForRoll[i][j] = the score for roll with rollID=i if it counts for
-//scores::x s.t. scores::x==j
 void calculateScores() {
     for (int rollId = 0; rollId < (int)allRollsIndistinguishable.size(); ++rollId) {
         const array<int, 5>& roll = allRollsIndistinguishable[rollId];
@@ -121,10 +121,6 @@ void initAllRolls() {
         ++numberOfRoll[getRollId(roll)];
 }
 
-//maxEV[subset scores filled][num rerolls][roll] = max expected score
-double maxEV[1 << 13][3][252];
-double averageMaxEV[1 << 13];
-
 struct Move {
     int subsetReroll, scoreTaken;
     double evForMove;
@@ -134,6 +130,9 @@ bool operator<(const Move& x, const Move& y) {
     return x.evForMove > y.evForMove;
 }
 
+//maxEV[subset scores filled][num rerolls][roll] = max expected score
+double maxEV[1 << 13][3][252];
+double averageMaxEV[1 << 13];
 vector<Move> transitions[1 << 13][3][252];
 
 void calcExpectedValue() {
@@ -206,7 +205,7 @@ void calcExpectedValue() {
                     for (int subsetRerolled : distinctSubsetsForReroll[roll]) {//number of iterations is <= 32
                         //find average of expected values
                         double nextScore = 0;
-                        for (auto [cnt, endRoll] : cntReroll[roll][subsetRerolled])
+                        for (auto [cnt, endRoll] : cntReroll[roll][subsetRerolled])//number of iterations is <= 252
                             nextScore += cnt * maxEV[subsetFilled][numberRerolls - 1][endRoll];
                         nextScore /= double(pow6[__builtin_popcount(subsetRerolled)]);
                         currTransitions.push_back({subsetRerolled, -1, nextScore});
