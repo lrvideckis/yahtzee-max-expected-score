@@ -126,8 +126,6 @@ double maxEV[1 << 13][3][252];
 double averageMaxEV[1 << 13];
 vector<int> distinctSubsetsForReroll[252];
 vector<pair<int, int>> cntReroll[252][1 << 5];
-int tempCnt[252];
-array<int, 5> tempRolls[7776];
 
 struct Move {
     int subsetReroll, scoreTaken;
@@ -160,8 +158,8 @@ void calcExpectedValue() {
     for (int roll = 0; roll < (int)allRollsIndistinguishable.size(); ++roll) {
         for (int subsetRerolled : distinctSubsetsForReroll[roll]) {
             const int iters = pow6[__builtin_popcount(subsetRerolled)];
-            int sz = 0;
             map<array<int, 5>, int> cnts;
+            vector<array<int, 5>> tempRolls;
             for (int id = 0; id < iters; ++id) {
                 array<int, 5> newRoll = allRollsIndistinguishable[roll];
                 int ptr = 0;
@@ -172,13 +170,12 @@ void calcExpectedValue() {
                 //here, we have a triplet: (start roll, subset die re-rolled, end roll)
                 sort(newRoll.begin(), newRoll.end());
                 ++cnts[newRoll];
-                tempRolls[sz++] = newRoll;
+                tempRolls.push_back(newRoll);
             }
-            sort(tempRolls, tempRolls + sz);
-            for (int endRoll = 0; endRoll < 252; ++endRoll)
-                tempCnt[endRoll] = 0;
+            sort(tempRolls.begin(), tempRolls.end());
+            vector<int> tempCnt(252, 0);
             int ptr = 0;
-            for (int i = 0; i < sz; ++i) {
+            for (int i = 0; i < (int)tempRolls.size(); ++i) {
                 while (ptr < (int)allRollsIndistinguishable.size() && allRollsIndistinguishable[ptr] < tempRolls[i]) ++ptr;
                 assert(tempRolls[i] == allRollsIndistinguishable[ptr]);
                 ++tempCnt[ptr];
@@ -189,6 +186,7 @@ void calcExpectedValue() {
             }
         }
     }
+    //start of the actual DP part, everything before this is just calculating helper arrays
     for (int subsetFilled = 1; subsetFilled < (1 << 13); ++subsetFilled) {
         for (int numberRerolls = 0; numberRerolls <= 2; ++numberRerolls) {
             for (int roll = 0; roll < (int)allRollsIndistinguishable.size(); ++roll) {
@@ -205,7 +203,7 @@ void calcExpectedValue() {
                 //re-roll
                 if (numberRerolls > 0) {
                     //for each subset of die that you can re-roll
-                    for (int subsetRerolled : distinctSubsetsForReroll[roll]) {
+                    for (int subsetRerolled : distinctSubsetsForReroll[roll]) {//number of iterations is <= 32
                         //find average of expected values
                         double nextScore = 0;
                         for (auto [cnt, endRoll] : cntReroll[roll][subsetRerolled])
