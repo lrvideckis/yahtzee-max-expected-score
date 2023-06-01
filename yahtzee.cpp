@@ -317,21 +317,25 @@ void inputOutput() {
 
 int main() {
     cout << setprecision(5) << fixed;
+    //
     cout << "calling initAllRolls ... " << flush;
     auto start = high_resolution_clock::now();
     initAllRolls();
     auto duration = duration_cast<microseconds>(high_resolution_clock::now() - start);
     cout << "Finished in " << double(duration.count()) / double(1000 * 1000) << " seconds." << endl;
+    //
     cout << "calling calculateScores ... " << flush;
     start = high_resolution_clock::now();
     calculateScores();
     duration = duration_cast<microseconds>(high_resolution_clock::now() - start);
     cout << "Finished in " << double(duration.count()) / double(1000 * 1000) << " seconds." << endl;
+    //
     cout << "calling calcHelperArraysForDP ... " << flush;
     start = high_resolution_clock::now();
     calcHelperArraysForDP();
     duration = duration_cast<microseconds>(high_resolution_clock::now() - start);
     cout << "Finished in " << double(duration.count()) / double(1000 * 1000) << " seconds." << endl;
+    //
     cout << "calling calcExpectedValue ... " << flush;
     start = high_resolution_clock::now();
     calcExpectedValue();
@@ -341,5 +345,6 @@ int main() {
          averageMaxEV[(1 << 13) - 1] << " points. This is lower than the true value as" << endl <<
          "the program doesn't consider multiple yahtzees (each worth 100 points), or" << endl <<
          "the +35 point bonus for scoring >= 63 points in the top section." << endl << endl;
+    //
     inputOutput();
 }
