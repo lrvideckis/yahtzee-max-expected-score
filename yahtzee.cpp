@@ -212,6 +212,14 @@ void calcHelperArraysForDP() {
             }
         }
     }
+    for (int roll = 0; roll < (int)allRollsIndistinguishable.size(); ++roll) {
+        for (int subsetRerolled : distinctSubsetsForReroll[roll]) {
+            int sum = 0;
+            for (auto [cnt, _] : cntReroll[roll][subsetRerolled])
+                sum += cnt;
+            assert(sum == pow6[__builtin_popcount(subsetRerolled)]);
+        }
+    }
 }
 
 struct Move {
