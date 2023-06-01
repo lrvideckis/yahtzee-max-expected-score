@@ -121,24 +121,32 @@ void calculateScores() {
     }
 }
 
-struct Move {
-    int subsetReroll, scoreTaken;
-    double evForMove;
-};
+//distinctSubsetsForReroll[roll id] = vector of ways to remove die (size <= 2^5=32) such that
+//no 2 subsets will leave the same set of die
+vector<int> distinctSubsetsForReroll[252];
 
-bool operator<(const Move& x, const Move& y) {
-    return x.evForMove > y.evForMove;
-}
+//cntReroll[roll id][subset rerolled] = list of possible die roll-ids after rerolling and their counts
+//for example if you take the roll "1 2 3 1 1" and re-roll the 2 and the 3
+//then you have 36 possibilities for the next roll:
+//1 1 1 1 1
+//1 1 2 1 1
+//1 1 3 1 1
+//...
+//1 1 6 1 1
+//1 2 1 1 1
+//1 2 2 1 1
+//1 2 3 1 1
+//...
+//1 2 6 1 1
+//1 3 1 1 1
+//1 3 2 1 1
+//...
+//1 6 6 1 1
+//but looking at this list, some rolls appear twice (after uniqueing), like "1 2 3 1 1" and "1 3 2 1 1"
+//so these will appear in cntReroll[...][...] as a pair: {2, roll id of "1 2 3 1 1"}
+vector<pair<int, int>> cntReroll[252][1 << 5];
 
-//maxEV[subset scores filled][num rerolls][roll] = max expected score
-double maxEV[1 << 13][3][252];
-double averageMaxEV[1 << 13];
-vector<Move> transitions[1 << 13][3][252];
-
-void calcExpectedValue() {
-    cout << "Calculating expected values... " << flush;
-    auto start = high_resolution_clock::now();
-    vector<vector<int>> distinctSubsetsForReroll(252);
+void calcHelperArraysForDP() {
     for (int roll = 0; roll < (int)allRollsIndistinguishable.size(); ++roll) {
         map<vector<int>, int> keptDieToSubset;
         for (int subsetRerolled = 1; subsetRerolled < (1 << 5); ++subsetRerolled) {
@@ -153,7 +161,6 @@ void calcExpectedValue() {
         for (auto& p : keptDieToSubset)
             distinctSubsetsForReroll[roll].push_back(p.second);
     }
-    vector<vector<vector<pair<int, int>>>> cntReroll(252, vector<vector<pair<int, int>>>(1 << 5));
     for (int roll = 0; roll < (int)allRollsIndistinguishable.size(); ++roll) {
         for (int subsetRerolled : distinctSubsetsForReroll[roll]) {
             const int iters = pow6[__builtin_popcount(subsetRerolled)];
@@ -185,7 +192,25 @@ void calcExpectedValue() {
             }
         }
     }
-    //start of the actual DP part, everything before this is just calculating helper arrays
+}
+
+struct Move {
+    int subsetReroll, scoreTaken;
+    double evForMove;
+};
+
+bool operator<(const Move& x, const Move& y) {
+    return x.evForMove > y.evForMove;
+}
+
+//maxEV[subset scores filled][num rerolls][roll] = max expected score
+double maxEV[1 << 13][3][252];
+double averageMaxEV[1 << 13];
+vector<Move> transitions[1 << 13][3][252];
+
+void calcExpectedValue() {
+    cout << "Calculating expected values... " << flush;
+    auto start = high_resolution_clock::now();
     for (int subsetFilled = 1; subsetFilled < (1 << 13); ++subsetFilled) {
         for (int numberRerolls = 0; numberRerolls <= 2; ++numberRerolls) {
             for (int roll = 0; roll < (int)allRollsIndistinguishable.size(); ++roll) {
@@ -303,6 +328,7 @@ int main() {
     cout << setprecision(5) << fixed;
     initAllRolls();
     calculateScores();
+    calcHelperArraysForDP();
     calcExpectedValue();
     inputOutput();
 }
