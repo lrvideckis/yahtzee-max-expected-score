@@ -209,8 +209,6 @@ double averageMaxEV[1 << 13];
 vector<Move> transitions[1 << 13][3][252];
 
 void calcExpectedValue() {
-    cout << "Calculating expected values... " << flush;
-    auto start = high_resolution_clock::now();
     for (int subsetFilled = 1; subsetFilled < (1 << 13); ++subsetFilled) {
         for (int numberRerolls = 0; numberRerolls <= 2; ++numberRerolls) {
             for (int roll = 0; roll < (int)allRollsIndistinguishable.size(); ++roll) {
@@ -242,13 +240,6 @@ void calcExpectedValue() {
             }
         }
     }
-    auto stop = high_resolution_clock::now();
-    auto duration = duration_cast<microseconds>(stop - start);
-    cout << "Finished in " << double(duration.count()) / double(1000 * 1000) << " seconds." << endl << endl;
-    cout << "The maximum expected score for a single Yahtzee round is" << endl <<
-         averageMaxEV[(1 << 13) - 1] << " points. This is lower than the true value as" << endl <<
-         "the program doesn't consider multiple yahtzees (each worth 100 points), or" << endl <<
-         "the +35 point bonus for scoring >= 63 points in the top section." << endl << endl;
 }
 
 bool cmpSeconds(const pair<int, int>& x, const pair<int, int>& y) {
@@ -326,9 +317,29 @@ void inputOutput() {
 
 int main() {
     cout << setprecision(5) << fixed;
+    cout << "calling initAllRolls ... " << flush;
+    auto start = high_resolution_clock::now();
     initAllRolls();
+    auto duration = duration_cast<microseconds>(high_resolution_clock::now() - start);
+    cout << "Finished in " << double(duration.count()) / double(1000 * 1000) << " seconds." << endl;
+    cout << "calling calculateScores ... " << flush;
+    start = high_resolution_clock::now();
     calculateScores();
+    duration = duration_cast<microseconds>(high_resolution_clock::now() - start);
+    cout << "Finished in " << double(duration.count()) / double(1000 * 1000) << " seconds." << endl;
+    cout << "calling calcHelperArraysForDP ... " << flush;
+    start = high_resolution_clock::now();
     calcHelperArraysForDP();
+    duration = duration_cast<microseconds>(high_resolution_clock::now() - start);
+    cout << "Finished in " << double(duration.count()) / double(1000 * 1000) << " seconds." << endl;
+    cout << "calling calcExpectedValue ... " << flush;
+    start = high_resolution_clock::now();
     calcExpectedValue();
+    duration = duration_cast<microseconds>(high_resolution_clock::now() - start);
+    cout << "Finished in " << double(duration.count()) / double(1000 * 1000) << " seconds." << endl;
+    cout << "The maximum expected score for a single Yahtzee round is" << endl <<
+         averageMaxEV[(1 << 13) - 1] << " points. This is lower than the true value as" << endl <<
+         "the program doesn't consider multiple yahtzees (each worth 100 points), or" << endl <<
+         "the +35 point bonus for scoring >= 63 points in the top section." << endl << endl;
     inputOutput();
 }
