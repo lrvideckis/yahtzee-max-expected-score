@@ -341,6 +341,7 @@ int main() {
     calcExpectedValue();
     duration = duration_cast<microseconds>(high_resolution_clock::now() - start);
     cout << "Finished in " << double(duration.count()) / double(1000 * 1000) << " seconds." << endl;
+    //
     cout << "The maximum expected score for a single Yahtzee round is" << endl <<
          averageMaxEV[(1 << 13) - 1] << " points. This is lower than the true value as" << endl <<
          "the program doesn't consider multiple yahtzees (each worth 100 points), or" << endl <<
