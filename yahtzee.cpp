@@ -10,6 +10,43 @@
 using namespace std;
 using namespace std::chrono;
 
+int numberOfRoll[252];
+int pow6[6];
+vector<array<int, 5>> allRollsIndistinguishable;
+vector<array<int, 5>> allRollsDistinguishable;
+
+int getRollId(array<int, 5> roll) {
+    for (int i = 0; i < (int)roll.size(); ++i)
+        assert(1 <= roll[i] && roll[i] <= 6);
+    sort(roll.begin(), roll.end());
+    const auto it = lower_bound(allRollsIndistinguishable.begin(), allRollsIndistinguishable.end(), roll);
+    assert(*it == roll);
+    return int(it - allRollsIndistinguishable.begin());
+}
+
+void initAllRolls() {
+    pow6[0] = 1;
+    for (int i = 1; i < 6; ++i)
+        pow6[i] = 6 * pow6[i - 1];
+    for (int rollVal = 0; rollVal < pow6[5]; ++rollVal) {
+        int temp = rollVal;
+        array<int, 5> roll;
+        for (int i = 0; i < 5; ++i) {
+            roll[i] = temp % 6 + 1;
+            temp /= 6;
+        }
+        allRollsDistinguishable.push_back(roll);
+        sort(roll.begin(), roll.end());
+        allRollsIndistinguishable.push_back(roll);
+    }
+    sort(allRollsIndistinguishable.begin(), allRollsIndistinguishable.end());
+    allRollsIndistinguishable.erase(unique(allRollsIndistinguishable.begin(), allRollsIndistinguishable.end()), allRollsIndistinguishable.end());
+    assert(allRollsIndistinguishable.size() == 252);
+    assert(allRollsDistinguishable.size() == 7776);//6 ^ 5
+    for (const auto& roll : allRollsDistinguishable)
+        ++numberOfRoll[getRollId(roll)];
+}
+
 enum scores {
     //top part
     ones,
@@ -32,9 +69,6 @@ enum scores {
 //scoreForRoll[i][j] = the score for roll with rollID=i if it counts for
 //scores::x s.t. scores::x==j
 int scoreForRoll[252][13];
-
-vector<array<int, 5>> allRollsIndistinguishable;
-vector<array<int, 5>> allRollsDistinguishable;
 
 void calculateScores() {
     for (int rollId = 0; rollId < (int)allRollsIndistinguishable.size(); ++rollId) {
@@ -85,40 +119,6 @@ void calculateScores() {
             }
         }
     }
-}
-
-int getRollId(array<int, 5> roll) {
-    for (int i = 0; i < (int)roll.size(); ++i)
-        assert(1 <= roll[i] && roll[i] <= 6);
-    sort(roll.begin(), roll.end());
-    const auto it = lower_bound(allRollsIndistinguishable.begin(), allRollsIndistinguishable.end(), roll);
-    assert(*it == roll);
-    return int(it - allRollsIndistinguishable.begin());
-}
-
-int numberOfRoll[252];
-int pow6[6];
-
-void initAllRolls() {
-    pow6[0] = 1;
-    for (int i = 1; i < 6; ++i)
-        pow6[i] = 6 * pow6[i - 1];
-    for (int rollVal = 0; rollVal < pow6[5]; ++rollVal) {
-        int temp = rollVal;
-        array<int, 5> roll;
-        for (int i = 0; i < 5; ++i) {
-            roll[i] = temp % 6 + 1;
-            temp /= 6;
-        }
-        allRollsDistinguishable.push_back(roll);
-        sort(roll.begin(), roll.end());
-        allRollsIndistinguishable.push_back(roll);
-    }
-    sort(allRollsIndistinguishable.begin(), allRollsIndistinguishable.end());
-    allRollsIndistinguishable.erase(unique(allRollsIndistinguishable.begin(), allRollsIndistinguishable.end()), allRollsIndistinguishable.end());
-    assert(allRollsIndistinguishable.size() == 252);
-    for (const auto& roll : allRollsDistinguishable)
-        ++numberOfRoll[getRollId(roll)];
 }
 
 struct Move {
