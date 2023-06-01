@@ -232,16 +232,14 @@ bool operator<(const Move& x, const Move& y) {
 }
 
 //maxEV[subset scores filled][num rerolls][roll] = max expected score
-double maxEV[1 << 13][3][252];
-double averageMaxEV[1 << 13];
-vector<Move> transitions[1 << 13][3][252];
+double maxEV[1 << 13][64][3][252];
+double averageMaxEV[1 << 13][64];
 
 void calcExpectedValue() {
     for (int subsetFilled = 1; subsetFilled < (1 << 13); ++subsetFilled) {
         for (int numberRerolls = 0; numberRerolls <= 2; ++numberRerolls) {
             for (int roll = 0; roll < (int)allRollsIndistinguishable.size(); ++roll) {
                 double& currDp = maxEV[subsetFilled][numberRerolls][roll];
-                vector<Move>& currTransitions = transitions[subsetFilled][numberRerolls][roll];
                 //take roll
                 for (int scoreVal = 0; scoreVal < 13; ++scoreVal) {
                     if (subsetFilled & (1 << scoreVal)) {
@@ -310,7 +308,6 @@ void inputOutput() {
         cout << "number of re-rolls left (0, 1, or 2)" << string(28, '.') << ' ';
         int rerolls;
         cin >> rerolls;
-        vector<Move>& currTransitions = transitions[subsetFilled][rerolls][getRollId(rollInt)];
         sort(currTransitions.begin(), currTransitions.end());
         cout << endl << "Options are:" << endl;
         for (const auto& currMove : currTransitions) {
