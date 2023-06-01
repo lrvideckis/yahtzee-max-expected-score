@@ -242,10 +242,6 @@ void calcExpectedValue() {
     }
 }
 
-bool cmpSeconds(const pair<int, int>& x, const pair<int, int>& y) {
-    return x.second < y.second;
-}
-
 void inputOutput() {
     vector<string> scoreDescription = {
         "ones",
@@ -301,7 +297,9 @@ void inputOutput() {
                     if (currMove.subsetReroll & (1 << die))
                         reroll[roll[die].second] = true;
                 }
-                sort(roll.begin(), roll.end(), cmpSeconds);
+                sort(roll.begin(), roll.end(), [](const pair<int, int>& x, const pair<int, int>& y) -> bool {
+                         return x.second < y.second;
+                     });
                 for (int die = 0; die < 5; ++die) {
                     if (reroll[die])
                         cout << " _";
