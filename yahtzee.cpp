@@ -122,7 +122,27 @@ void calculateScores() {
 }
 
 //distinctSubsetsForReroll[roll id] = vector of ways to remove die (size <= 2^5=32) such that
-//no 2 subsets will leave the same set of die
+//no 2 subsets will leave the same set of die remaining
+//
+//for example, for the roll "1 1 1 1 2", here are all 9 possible re-rolls:
+//re-rolling 1 die
+//? 1 1 1 2
+//1 1 1 1 ?
+//re-rolling 2 die
+//? 1 1 1 ?
+//? ? 1 1 2
+//re-rolling 3 die
+//? ? 1 1 ?
+//? ? ? 1 2
+//re-rolling 4 die
+//? ? ? 1 ?
+//? ? ? ? 2
+//re-rolling 5 die
+//? ? ? ? ?
+//
+//and for example, we consider the following the same, as the leave the same set of die remaining
+//? 1 1 1 2
+//1 ? 1 1 2
 vector<int> distinctSubsetsForReroll[252];
 
 //cntReroll[roll id][subset rerolled] = list of possible die roll-ids after rerolling and their counts
@@ -333,6 +353,9 @@ int main() {
     calcHelperArraysForDP();
     duration = duration_cast<microseconds>(high_resolution_clock::now() - start);
     cout << "Finished in " << double(duration.count()) / double(1000 * 1000) << " seconds." << endl;
+    //
+    //to test the commented example of distinctSubsetsForReroll
+    assert((int)distinctSubsetsForReroll[getRollId({1, 1, 1, 1, 2})].size() == 9);
     //
     cout << "calling calcExpectedValue ... " << flush;
     start = high_resolution_clock::now();
