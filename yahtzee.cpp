@@ -231,40 +231,50 @@ bool operator<(const Move& x, const Move& y) {
     return x.evForMove > y.evForMove;
 }
 
-//maxEV[subset scores filled][num rerolls][roll] = max expected score
+//maxEV[subset scores filled][num points you have to score to get upper bonus][num rerolls][roll] = max expected score
 float maxEV[1 << 13][64][3][252];
 float averageMaxEV[1 << 13][64];
-vector<Move> transitions[1 << 13][3][252];
+vector<Move> transitions[1 << 13][64][3][252];
 
 void calcExpectedValue() {
     for (int subsetFilled = 1; subsetFilled < (1 << 13); ++subsetFilled) {
-        for (int numberRerolls = 0; numberRerolls <= 2; ++numberRerolls) {
-            for (int roll = 0; roll < (int)allRollsIndistinguishable.size(); ++roll) {
-                float& currDp = maxEV[subsetFilled][numberRerolls][roll];
-                vector<Move>& currTransitions = transitions[subsetFilled][numberRerolls][roll];
-                //take roll
-                for (int scoreVal = 0; scoreVal < 13; ++scoreVal) {
-                    if (subsetFilled & (1 << scoreVal)) {
-                        float nextScore = scoreForRoll[roll][scoreVal] + averageMaxEV[subsetFilled ^ (1 << scoreVal)];
-                        currTransitions.push_back({-1, scoreVal, nextScore});
-                        currDp = max(currDp, nextScore);
+        for (int pointsUpperSection = 0; pointsUpperSection <= 63; pointsUpperSection++) {
+            for (int numberRerolls = 0; numberRerolls <= 2; ++numberRerolls) {
+                for (int roll = 0; roll < (int)allRollsIndistinguishable.size(); ++roll) {
+                    float& currDp = maxEV[subsetFilled][pointsUpperSection][numberRerolls][roll];
+                    vector<Move>& currTransitions = transitions[subsetFilled][pointsUpperSection][numberRerolls][roll];
+                    //take roll
+                    for (int scoreVal = 0; scoreVal < 13; ++scoreVal) {
+                        if (subsetFilled & (1 << scoreVal)) {
+                            int currScoreRoll = scoreForRoll[roll][scoreVal];
+                            float nextScore = currScoreRoll;
+                            if (scoreVal < 6) {//if upper section
+                                int nextPointsUpperSection = max(pointsUpperSection - currScoreRoll, 0);
+                                nextScore += averageMaxEV[subsetFilled ^ (1 << scoreVal)][nextPointsUpperSection];
+                                if (pointsUpperSection > 0 && nextPointsUpperSection == 0)
+                                    nextScore += 35.0;
+                            } else
+                                nextScore += averageMaxEV[subsetFilled ^ (1 << scoreVal)][pointsUpperSection];
+                            currTransitions.push_back({-1, scoreVal, nextScore});
+                            currDp = max(currDp, nextScore);
+                        }
                     }
-                }
-                //re-roll
-                if (numberRerolls > 0) {
-                    //for each subset of die that you can re-roll
-                    for (int subsetRerolled : distinctSubsetsForReroll[roll]) {//number of iterations is <= 32
-                        //find average of expected values
-                        float nextScore = 0;
-                        for (auto [cnt, endRoll] : cntReroll[roll][subsetRerolled])//number of iterations is <= 252
-                            nextScore += cnt * maxEV[subsetFilled][numberRerolls - 1][endRoll];
-                        nextScore /= float(pow6[__builtin_popcount(subsetRerolled)]);
-                        currTransitions.push_back({subsetRerolled, -1, nextScore});
-                        currDp = max(currDp, nextScore);
+                    //re-roll
+                    if (numberRerolls > 0) {
+                        //for each subset of die that you can re-roll
+                        for (int subsetRerolled : distinctSubsetsForReroll[roll]) {
+                            //find average of expected values
+                            float nextScore = 0;
+                            for (auto [cnt, endRoll] : cntReroll[roll][subsetRerolled])
+                                nextScore += cnt * maxEV[subsetFilled][pointsUpperSection][numberRerolls - 1][endRoll];
+                            nextScore /= float(pow6[__builtin_popcount(subsetRerolled)]);
+                            currTransitions.push_back({subsetRerolled, -1, nextScore});
+                            currDp = max(currDp, nextScore);
+                        }
                     }
+                    if (numberRerolls == 2)
+                        averageMaxEV[subsetFilled][pointsUpperSection] += numberOfRoll[roll] * currDp / float(pow6[5]);
                 }
-                if (numberRerolls == 2)
-                    averageMaxEV[subsetFilled] += numberOfRoll[roll] * currDp / float(pow6[5]);
             }
         }
     }
@@ -288,15 +298,18 @@ void inputOutput() {
     };
     while (true) {
         int sumFilledScores = 0;
+        int sumFilledUpperSection = 0;
         int subsetFilled = 0;
         for (int i = 0; i < 13; ++i) {
             cout << "enter in score for " << scoreDescription[i] << " (or -1 for not filled yet)";
             cout << string(18 - (int)scoreDescription[i].size(), '.') << ' ';
             int score;
             cin >> score;
-            if (score >= 0)
+            if (score >= 0) {
                 sumFilledScores += score;
-            else
+                if (i < 6)
+                    sumFilledUpperSection += score;
+            } else
                 subsetFilled += (1 << i);
         }
         cout << "enter in dice roll (ex: 2 4 6 3 2)" << string(30, '.') << ' ';
@@ -310,7 +323,7 @@ void inputOutput() {
         cout << "number of re-rolls left (0, 1, or 2)" << string(28, '.') << ' ';
         int rerolls;
         cin >> rerolls;
-        vector<Move>& currTransitions = transitions[subsetFilled][rerolls][getRollId(rollInt)];
+        vector<Move>& currTransitions = transitions[subsetFilled][max(63 - sumFilledUpperSection, 0)][rerolls][getRollId(rollInt)];
         sort(currTransitions.begin(), currTransitions.end());
         cout << endl << "Options are:" << endl;
         for (const auto& currMove : currTransitions) {
@@ -376,5 +389,5 @@ int main() {
          "the program doesn't consider multiple yahtzees (each worth 100 points), or" << endl <<
          "the +35 point bonus for scoring >= 63 points in the top section." << endl << endl;
     //
-    inputOutput();
+    //inputOutput();
 }
