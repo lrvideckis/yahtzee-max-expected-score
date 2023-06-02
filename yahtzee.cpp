@@ -224,7 +224,7 @@ void calcHelperArraysForDP() {
 
 struct Move {
     int subsetReroll, scoreTaken;
-    double evForMove;
+    float evForMove;
 };
 
 bool operator<(const Move& x, const Move& y) {
@@ -232,20 +232,20 @@ bool operator<(const Move& x, const Move& y) {
 }
 
 //maxEV[subset scores filled][num rerolls][roll] = max expected score
-double maxEV[1 << 13][3][252];
-double averageMaxEV[1 << 13];
+float maxEV[1 << 13][3][252];
+float averageMaxEV[1 << 13];
 vector<Move> transitions[1 << 13][3][252];
 
 void calcExpectedValue() {
     for (int subsetFilled = 1; subsetFilled < (1 << 13); ++subsetFilled) {
         for (int numberRerolls = 0; numberRerolls <= 2; ++numberRerolls) {
             for (int roll = 0; roll < (int)allRollsIndistinguishable.size(); ++roll) {
-                double& currDp = maxEV[subsetFilled][numberRerolls][roll];
+                float& currDp = maxEV[subsetFilled][numberRerolls][roll];
                 vector<Move>& currTransitions = transitions[subsetFilled][numberRerolls][roll];
                 //take roll
                 for (int scoreVal = 0; scoreVal < 13; ++scoreVal) {
                     if (subsetFilled & (1 << scoreVal)) {
-                        const double nextScore = scoreForRoll[roll][scoreVal] + averageMaxEV[subsetFilled ^ (1 << scoreVal)];
+                        float nextScore = scoreForRoll[roll][scoreVal] + averageMaxEV[subsetFilled ^ (1 << scoreVal)];
                         currTransitions.push_back({-1, scoreVal, nextScore});
                         currDp = max(currDp, nextScore);
                     }
@@ -255,16 +255,16 @@ void calcExpectedValue() {
                     //for each subset of die that you can re-roll
                     for (int subsetRerolled : distinctSubsetsForReroll[roll]) {//number of iterations is <= 32
                         //find average of expected values
-                        double nextScore = 0;
+                        float nextScore = 0;
                         for (auto [cnt, endRoll] : cntReroll[roll][subsetRerolled])//number of iterations is <= 252
                             nextScore += cnt * maxEV[subsetFilled][numberRerolls - 1][endRoll];
-                        nextScore /= double(pow6[__builtin_popcount(subsetRerolled)]);
+                        nextScore /= float(pow6[__builtin_popcount(subsetRerolled)]);
                         currTransitions.push_back({subsetRerolled, -1, nextScore});
                         currDp = max(currDp, nextScore);
                     }
                 }
                 if (numberRerolls == 2)
-                    averageMaxEV[subsetFilled] += numberOfRoll[roll] * currDp / double(pow6[5]);
+                    averageMaxEV[subsetFilled] += numberOfRoll[roll] * currDp / float(pow6[5]);
             }
         }
     }
@@ -315,7 +315,7 @@ void inputOutput() {
         cout << endl << "Options are:" << endl;
         for (const auto& currMove : currTransitions) {
             if (currMove.subsetReroll == -1) //score roll
-                cout << "Score roll as " << scoreDescription[currMove.scoreTaken] << " giving " << double(sumFilledScores) + currMove.evForMove << " expected points." << endl;
+                cout << "Score roll as " << scoreDescription[currMove.scoreTaken] << " giving " << float(sumFilledScores) + currMove.evForMove << " expected points." << endl;
             else {//re roll
                 assert(currMove.scoreTaken == -1);
                 cout << "Keep die";
@@ -334,7 +334,7 @@ void inputOutput() {
                     else
                         cout << " " << roll[die].first;
                 }
-                cout << " and reroll giving " << double(sumFilledScores) + currMove.evForMove << " expected points." << endl;
+                cout << " and reroll giving " << float(sumFilledScores) + currMove.evForMove << " expected points." << endl;
             }
         }
         cout << endl << endl;
@@ -348,19 +348,19 @@ int main() {
     auto start = high_resolution_clock::now();
     initAllRolls();
     auto duration = duration_cast<microseconds>(high_resolution_clock::now() - start);
-    cout << "Finished in " << double(duration.count()) / double(1000 * 1000) << " seconds." << endl;
+    cout << "Finished in " << float(duration.count()) / float(1000 * 1000) << " seconds." << endl;
     //
     cout << "calling calculateScores ... " << flush;
     start = high_resolution_clock::now();
     calculateScores();
     duration = duration_cast<microseconds>(high_resolution_clock::now() - start);
-    cout << "Finished in " << double(duration.count()) / double(1000 * 1000) << " seconds." << endl;
+    cout << "Finished in " << float(duration.count()) / float(1000 * 1000) << " seconds." << endl;
     //
     cout << "calling calcHelperArraysForDP ... " << flush;
     start = high_resolution_clock::now();
     calcHelperArraysForDP();
     duration = duration_cast<microseconds>(high_resolution_clock::now() - start);
-    cout << "Finished in " << double(duration.count()) / double(1000 * 1000) << " seconds." << endl;
+    cout << "Finished in " << float(duration.count()) / float(1000 * 1000) << " seconds." << endl;
     //
     //to test the commented example of distinctSubsetsForReroll
     assert((int)distinctSubsetsForReroll[getRollId({1, 1, 1, 1, 2})].size() == 9);
@@ -369,7 +369,7 @@ int main() {
     start = high_resolution_clock::now();
     calcExpectedValue();
     duration = duration_cast<microseconds>(high_resolution_clock::now() - start);
-    cout << "Finished in " << double(duration.count()) / double(1000 * 1000) << " seconds." << endl;
+    cout << "Finished in " << float(duration.count()) / float(1000 * 1000) << " seconds." << endl;
     //
     cout << "The maximum expected score for a single Yahtzee round is" << endl <<
          averageMaxEV[(1 << 13) - 1] << " points. This is lower than the true value as" << endl <<
