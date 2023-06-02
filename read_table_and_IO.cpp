@@ -76,6 +76,9 @@ int main() {
         size_t sz = fread(maxEV, sizeof maxEV[0][0][0][0], (1 << 13) * 64 * 3 * 252, expected_values_file);
         fclose(expected_values_file);
         assert(sz == (1 << 13) * 64 * 3 * 252);
+    } else {
+        cout << "expected_value_table.bin file doesn't exist :(" << endl;
+        return 0;
     }
     for (int subsetFilled = 1; subsetFilled < (1 << 13); ++subsetFilled)
         for (int pointsUpperSection = 0; pointsUpperSection <= 63; pointsUpperSection++)
