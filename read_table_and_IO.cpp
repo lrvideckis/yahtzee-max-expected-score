@@ -71,6 +71,7 @@ int main() {
     initAllRolls();
     calculateScores();
     calcHelperArraysForDP();
+    cout << "reading expected value table from expected_value_table.bin" << endl;
     if (FILE* expected_values_file = fopen("expected_value_table.bin", "rb")) {
         size_t sz = fread(maxEV, sizeof maxEV[0][0][0][0], (1 << 13) * 64 * 3 * 252, expected_values_file);
         fclose(expected_values_file);
