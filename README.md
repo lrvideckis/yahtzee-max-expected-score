@@ -4,6 +4,8 @@ This repo contains the following files:
 - `calculate_expected_value_table.cpp` (run with `calculate_and_store_expected_values.sh`): calculates expected values/scores and writes it to `expected_value_table.bin`. **make sure to create an empty file expected_value_table.bin before running calculate_expected_value_table.cpp!!!!!!!!!!**
 - `read_table_and_IO.cpp` (run with `./run.sh`): it reads in the expected value table from `expected_value_table.bin` then does a cumbersome command-line IO (LMK if you have ideas of how to improve the format of IO)
 
+I don't plan to push the `expected_value_table.bin` file as github will charge me $5 a month to host it
+
 I tested the program by comparing values with this website: http://www-set.win.tue.nl/~wstomv/misc/yahtzee/osyp.php
 
 
