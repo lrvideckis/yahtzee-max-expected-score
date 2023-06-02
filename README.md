@@ -1,13 +1,12 @@
 # Yahtzee Maximum Expected Score
 
-This repo contains code to:
-1. calculate maximum expected score for a single Yahtzee round
-2. give a list of all options for an inputted situation, and the expected number of points for each option
+This repo contains the following files:
+- `calculate_expected_value_table.cpp`: calculates expected values/scores and writes it to `expected_value_table.bin`. It takes about ~6.7 minutes to run on my laptop
+- `expected_value_table.bin`: the table of expected scores I got via running `calculate_expected_value_table.cpp` myself. You can either generate this yourself locally (`./calculate_and_store_expected_values.sh`; **make sure to create the empty file expected_value_table.bin before running calculate_expected_value_table.cpp!!**), or attempt to download it from this repo, both options will take a while :(
+- `read_table_and_IO.cpp`: it reads in the expected value table from `expected_value_table.bin` then does a cumbersome command-line IO (LMK if you have ideas of how to improve the format of IO)
 
 I tested the program by comparing values with this website: http://www-set.win.tue.nl/~wstomv/misc/yahtzee/osyp.php
 
-compile: `./compile.sh`
-run: `./yahtzee.out`
 
 example run:
 
