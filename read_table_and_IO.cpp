@@ -27,7 +27,6 @@ struct Transition {
 vector<Transition> getTransitionsForState(int subsetScoresFilled, int pointsUpperSectionSoFar, int numRerolls, array<int, 5> roll) {
     int pointsUpperToGo = min(63 - pointsUpperSectionSoFar, 0);
     int rollId = getRollId(roll);
-    float& currDp = maxEV[subsetScoresFilled][pointsUpperToGo][numRerolls][rollId];
     vector<Transition> transitions;
     //take roll
     for (int scoreVal = 0; scoreVal < 13; ++scoreVal) {

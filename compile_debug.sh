@@ -22,4 +22,4 @@ g++ \
     -fstack-protector \
     -D_GLIBCXX_SANITIZE_VECTOR \
     -D_FORTIFY_SOURCE=2 \
-    yahtzee.cpp -o yahtzee_debug.out
+    read_table_and_IO.cpp -o read_table_and_IO.out
