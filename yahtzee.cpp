@@ -232,8 +232,8 @@ bool operator<(const Move& x, const Move& y) {
 }
 
 //maxEV[subset scores filled][num rerolls][roll] = max expected score
-float maxEV[1 << 13][3][252];
-float averageMaxEV[1 << 13];
+float maxEV[1 << 13][64][3][252];
+float averageMaxEV[1 << 13][64];
 vector<Move> transitions[1 << 13][3][252];
 
 void calcExpectedValue() {
