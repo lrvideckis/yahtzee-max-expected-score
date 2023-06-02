@@ -312,7 +312,7 @@ int main() {
          averageMaxEV[(1 << 13) - 1][63] << " points. This is lower than the true value as" << endl <<
          "the program doesn't consider multiple yahtzees (each worth 100 points)" << endl << endl;
     cout << "saving expected values to file" << endl;
-    if (std::FILE* expected_values_file = fopen("expected_value_table.bin", "wb")) {
+    if (FILE* expected_values_file = fopen("expected_value_table.bin", "wb")) {
         fwrite(maxEV, sizeof maxEV[0][0][0][0], (1 << 13) * 64 * 3 * 252, expected_values_file);
         fclose(expected_values_file);
     }
