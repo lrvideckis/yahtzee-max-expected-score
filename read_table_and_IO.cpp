@@ -25,7 +25,7 @@ struct Transition {
 };
 
 vector<Transition> getTransitionsForState(int subsetScoresFilled, int pointsUpperSectionSoFar, int numRerolls, array<int, 5> roll) {
-    int pointsUpperToGo = min(63 - pointsUpperSectionSoFar, 0);
+    int pointsUpperToGo = max(63 - pointsUpperSectionSoFar, 0);
     int rollId = getRollId(roll);
     vector<Transition> transitions;
     //take roll
@@ -136,7 +136,11 @@ int main() {
         for (const auto& currTransition : transitions) {
             if (currTransition.subsetReroll == -1) {//score roll
                 assert(currTransition.scoreTaken != -1);
-                cout << "Score roll as " << scoreDescription[currTransition.scoreTaken] << " giving " << float(sumFilledScores) + currTransition.expectedValue << " expected points." << endl;
+                cout << "Score roll as " << scoreDescription[currTransition.scoreTaken] << " giving " << float(sumFilledScores) + currTransition.expectedValue << " expected points.";
+                if (currTransition.receivedUpperBonus) {
+                    cout << " This achieves the upper bonus.";
+                }
+                cout << endl;
             } else {//re roll
                 assert(currTransition.scoreTaken == -1);
                 cout << "Keep die";
