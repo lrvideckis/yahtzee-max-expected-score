@@ -118,6 +118,8 @@ int main() {
             } else
                 subsetFilled += (1 << i);
         }
+        if (sumUpperSection >= 63)
+            sumFilledScores += 35;
         cout << "enter in dice roll (ex: 2 4 6 3 2)" << string(30, '.') << ' ';
         array<int, 5> roll;
         array<pair<int, int>, 5> rollWithIndex;
