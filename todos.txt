@@ -1,4 +1,3 @@
-1. implement 35 point bonus for getting >= 63 points on first section
 2. implement multiple Yahtzees (each worth 100 points)
 3. implement a GUI (similar to below website), and/or think of better way to do IO
 4. add monte-carlo style test: test that average score of many rounds (playing optimally) gives 229.63850 points
