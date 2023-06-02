@@ -222,15 +222,6 @@ void calcHelperArraysForDP() {
     }
 }
 
-struct Move {
-    int subsetReroll, scoreTaken;
-    float evForMove;
-};
-
-bool operator<(const Move& x, const Move& y) {
-    return x.evForMove > y.evForMove;
-}
-
 //maxEV[subset scores filled][num points you have to score to get upper bonus][num rerolls][roll] = max expected score
 float maxEV[1 << 13][64][3][252];
 float averageMaxEV[1 << 13][64];
