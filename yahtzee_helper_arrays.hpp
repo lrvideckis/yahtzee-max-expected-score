@@ -128,7 +128,7 @@ void calculateScores() {
 //re-rolling 5 die
 //? ? ? ? ?
 //
-//and for example, we consider the following the same, as the leave the same set of die remaining
+//and for example, we consider the following the same, as they leave the same set of die remaining
 //? 1 1 1 2
 //1 ? 1 1 2
 vector<int> distinctSubsetsForReroll[252];
