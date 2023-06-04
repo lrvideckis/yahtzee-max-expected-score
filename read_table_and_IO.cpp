@@ -18,11 +18,11 @@ struct Transition {
     int subsetReroll = -1, scoreTaken = -1;
     float expectedValue = 0.0;
     bool receivedUpperBonus = false;
-
-    bool operator<(const Transition& other) {
-        return expectedValue > other.expectedValue;
-    }
 };
+
+bool operator<(const Transition& x, const Transition& y) {
+    return x.expectedValue > y.expectedValue;
+}
 
 vector<Transition> getTransitionsForState(int subsetScoresFilled, int pointsUpperSectionSoFar, int numRerolls, array<int, 5> roll) {
     int pointsUpperToGo = max(63 - pointsUpperSectionSoFar, 0);
